@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Reading Feed - Personal Blog Aggregator</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Spectral:wght@300;400;600;700&family=Crimson+Pro:wght@200;300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #2a1f3a 100%);
+            color: #e8e6e3;
+            font-family: 'Spectral', serif;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .bg-orb-1 {
+            position: fixed;
+            top: 10%;
+            right: 5%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255,107,107,0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(60px);
+            animation: float 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-orb-2 {
+            position: fixed;
+            bottom: 10%;
+            left: 5%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(107,178,255,0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(50px);
+            animation: float 15s ease-in-out infinite reverse;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, -30px) scale(1.1); }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 60px 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        header {
+            margin-bottom: 60px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .date-label {
+            font-size: 14px;
+            letter-spacing: 3px;
+            color: #ff6b6b;
+            font-weight: 300;
+            margin-bottom: 20px;
+            font-family: 'Crimson Pro', serif;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 700;
+            margin: 0 0 20px 0;
+            line-height: 1.1;
+        }
+
+        h1 .highlight {
+            color: #ff6b6b;
+        }
+
+        .tagline {
+            font-size: 18px;
+            font-style: italic;
+            color: #b8b5b0;
+            font-weight: 300;
+            font-family: 'Crimson Pro', serif;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            align-items: center;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #e8e6e3;
+            cursor: pointer;
+            font-size: 13px;
+            letter-spacing: 1px;
+            font-weight: 400;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border-radius: 4px;
+            font-family: 'Crimson Pro', serif;
+        }
+
+        .filter-btn:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        .filter-btn.active {
+            background: rgba(255,107,107,0.2);
+            border: 1px solid rgba(255,107,107,0.5);
+            color: #ff6b6b;
+            font-weight: 600;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            max-width: 400px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #e8e6e3;
+            font-size: 14px;
+            border-radius: 4px;
+            font-family: 'Crimson Pro', serif;
+            backdrop-filter: blur(10px);
+        }
+
+        .search-input::placeholder {
+            color: #666;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: rgba(255,107,107,0.5);
+            background: rgba(255,255,255,0.08);
+        }
+
+        .refresh-btn {
+            padding: 12px 24px;
+            background: rgba(255,107,107,0.2);
+            border: 1px solid rgba(255,107,107,0.5);
+            color: #ff6b6b;
+            cursor: pointer;
+            font-size: 13px;
+            letter-spacing: 1px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border-radius: 4px;
+            font-family: 'Crimson Pro', serif;
+        }
+
+        .refresh-btn:hover {
+            background: rgba(255,107,107,0.3);
+            transform: scale(1.05);
+        }
+
+        /* Stats bar */
+        .stats-bar {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 40px;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            animation: fadeInUp 1.1s ease-out;
+        }
+
+        .stat {
+            font-family: 'Crimson Pro', serif;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 600;
+            color: #ff6b6b;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: #999;
+            text-transform: uppercase;
+        }
+
+        /* Articles Grid */
+        .articles-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        @media (min-width: 1024px) {
+            .articles-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .article-card {
+            background: rgba(255,255,255,0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 8px;
+            padding: 30px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .article-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border-color: rgba(255,107,107,0.3);
+        }
+
+        .article-source {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            letter-spacing: 1.5px;
+            color: #ff6b6b;
+            font-family: 'Crimson Pro', serif;
+            font-weight: 600;
+        }
+
+        .source-favicon {
+            width: 16px;
+            height: 16px;
+            border-radius: 2px;
+        }
+
+        .article-title {
+            font-size: 24px;
+            font-weight: 600;
+            line-height: 1.3;
+            color: #fff;
+            margin: 0;
+        }
+
+        .article-excerpt {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #b8b5b0;
+            font-family: 'Crimson Pro', serif;
+            font-weight: 300;
+        }
+
+        .article-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            color: #999;
+            font-family: 'Crimson Pro', serif;
+            margin-top: auto;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .article-date {
+            font-size: 12px;
+        }
+
+        .article-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            padding: 4px 12px;
+            background: rgba(107,178,255,0.15);
+            border: 1px solid rgba(107,178,255,0.3);
+            color: #6bb2ff;
+            font-size: 11px;
+            border-radius: 12px;
+            font-family: 'Crimson Pro', serif;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 80px 20px;
+            color: #999;
+            font-size: 18px;
+            font-family: 'Crimson Pro', serif;
+        }
+
+        .no-articles {
+            text-align: center;
+            padding: 80px 20px;
+            color: #666;
+            font-size: 18px;
+            font-family: 'Crimson Pro', serif;
+        }
+
+        /* Manage Sources Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1f3a;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .modal-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 28px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close-btn:hover {
+            color: #ff6b6b;
+        }
+
+        .source-list {
+            list-style: none;
+            margin-bottom: 30px;
+        }
+
+        .source-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .source-info {
+            flex: 1;
+        }
+
+        .source-name {
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .source-url {
+            font-size: 12px;
+            color: #999;
+            font-family: 'Crimson Pro', serif;
+        }
+
+        .delete-btn {
+            padding: 8px 16px;
+            background: rgba(255,107,107,0.2);
+            border: 1px solid rgba(255,107,107,0.5);
+            color: #ff6b6b;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .delete-btn:hover {
+            background: rgba(255,107,107,0.3);
+        }
+
+        .add-source-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-input {
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #e8e6e3;
+            font-size: 14px;
+            border-radius: 4px;
+            font-family: 'Crimson Pro', serif;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: rgba(255,107,107,0.5);
+        }
+
+        .add-btn {
+            padding: 12px 24px;
+            background: rgba(255,107,107,0.2);
+            border: 1px solid rgba(255,107,107,0.5);
+            color: #ff6b6b;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .add-btn:hover {
+            background: rgba(255,107,107,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-orb-1"></div>
+    <div class="bg-orb-2"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="date-label" id="currentDate">LOADING...</div>
+            <h1>My <span class="highlight">Reading</span> Feed</h1>
+            <p class="tagline">all your favorite blogs and sites, in one place</p>
+        </header>
+
+        <!-- Controls -->
+        <div class="controls">
+            <div class="filter-group">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="unread">Unread</button>
+                <button class="filter-btn" data-filter="today">Today</button>
+                <button class="filter-btn" data-filter="this-week">This Week</button>
+            </div>
+            <div class="search-box">
+                <input type="text" class="search-input" id="searchInput" placeholder="Search articles...">
+            </div>
+            <button class="refresh-btn" onclick="refreshFeeds()">↻ Refresh</button>
+            <button class="refresh-btn" onclick="openManageSources()">⚙ Manage Sources</button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-bar">
+            <div class="stat">
+                <span class="stat-number" id="totalArticles">0</span>
+                <span class="stat-label">Total Articles</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number" id="unreadCount">0</span>
+                <span class="stat-label">Unread</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number" id="sourceCount">0</span>
+                <span class="stat-label">Sources</span>
+            </div>
+        </div>
+
+        <!-- Articles Grid -->
+        <div class="articles-grid" id="articlesGrid">
+            <div class="loading">Loading your feeds...</div>
+        </div>
+    </div>
+
+    <!-- Manage Sources Modal -->
+    <div class="modal" id="manageSourcesModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Manage Sources</h2>
+                <button class="close-btn" onclick="closeManageSources()">&times;</button>
+            </div>
+            
+            <h3 style="margin-bottom: 15px; color: #ff6b6b;">Your Sources</h3>
+            <ul class="source-list" id="sourceList"></ul>
+            
+            <h3 style="margin: 30px 0 15px; color: #ff6b6b;">Add New Source</h3>
+            <form class="add-source-form" onsubmit="addSource(event)">
+                <input type="text" class="form-input" id="sourceName" placeholder="Source Name (e.g., Paul Graham's Blog)" required>
+                <input type="url" class="form-input" id="sourceUrl" placeholder="Website URL or RSS Feed URL" required>
+                <button type="submit" class="add-btn">+ Add Source</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Sample data - In production, this would come from RSS feeds via a backend
+        let sources = [
+            {
+                id: 1,
+                name: "Paul Graham",
+                url: "http://www.paulgraham.com/",
+                rss: "http://www.paulgraham.com/rss.html",
+                favicon: "http://www.paulgraham.com/favicon.ico"
+            },
+            {
+                id: 2,
+                name: "Wait But Why",
+                url: "https://waitbutwhy.com",
+                rss: "https://waitbutwhy.com/feed",
+                favicon: "https://waitbutwhy.com/favicon.ico"
+            },
+            {
+                id: 3,
+                name: "Stratechery",
+                url: "https://stratechery.com",
+                rss: "https://stratechery.com/feed",
+                favicon: "https://stratechery.com/favicon.ico"
+            }
+        ];
+
+        let articles = [
+            {
+                id: 1,
+                source: "Paul Graham",
+                sourceFavicon: "http://www.paulgraham.com/favicon.ico",
+                title: "Founder Mode",
+                excerpt: "At a YC event last week Brian Chesky gave a talk that everyone who was there will remember. Most founders I've talked to since have said it was the best thing they ever heard about how to run a company.",
+                url: "http://www.paulgraham.com/foundermode.html",
+                date: new Date("2024-09-01"),
+                tags: ["startups", "management"],
+                read: false
+            },
+            {
+                id: 2,
+                source: "Wait But Why",
+                sourceFavicon: "https://waitbutwhy.com/favicon.ico",
+                title: "The AI Revolution: Road to Superintelligence",
+                excerpt: "We are on the edge of change comparable to the rise of human life on Earth. This is the first part of a two-part series on artificial intelligence.",
+                url: "https://waitbutwhy.com/2015/01/artificial-intelligence-revolution-1.html",
+                date: new Date("2024-08-28"),
+                tags: ["AI", "technology"],
+                read: false
+            },
+            {
+                id: 3,
+                source: "Stratechery",
+                sourceFavicon: "https://stratechery.com/favicon.ico",
+                title: "The End of the Beginning",
+                excerpt: "The AI revolution is real, but it's just getting started. What comes next will determine whether AI is the next computing revolution or just another tech hype cycle.",
+                url: "https://stratechery.com",
+                date: new Date("2024-08-25"),
+                tags: ["AI", "business"],
+                read: false
+            }
+        ];
+
+        let currentFilter = 'all';
+        let searchTerm = '';
+
+        // Initialize
+        function init() {
+            loadFromLocalStorage();
+            updateDate();
+            renderSources();
+            renderArticles();
+            setupEventListeners();
+        }
+
+        // Load data from localStorage
+        function loadFromLocalStorage() {
+            const savedSources = localStorage.getItem('feedSources');
+            const savedArticles = localStorage.getItem('feedArticles');
+            
+            if (savedSources) sources = JSON.parse(savedSources);
+            if (savedArticles) articles = JSON.parse(savedArticles).map(a => ({...a, date: new Date(a.date)}));
+        }
+
+        // Save to localStorage
+        function saveToLocalStorage() {
+            localStorage.setItem('feedSources', JSON.stringify(sources));
+            localStorage.setItem('feedArticles', JSON.stringify(articles));
+        }
+
+        // Update current date
+        function updateDate() {
+            const now = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options).toUpperCase();
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentFilter = e.target.dataset.filter;
+                    renderArticles();
+                });
+            });
+
+            // Search
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                searchTerm = e.target.value.toLowerCase();
+                renderArticles();
+            });
+        }
+
+        // Filter articles
+        function getFilteredArticles() {
+            let filtered = [...articles];
+
+            // Apply search
+            if (searchTerm) {
+                filtered = filtered.filter(a => 
+                    a.title.toLowerCase().includes(searchTerm) ||
+                    a.excerpt.toLowerCase().includes(searchTerm) ||
+                    a.source.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // Apply filter
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const weekAgo = new Date(today);
+            weekAgo.setDate(weekAgo.getDate() - 7);
+
+            switch(currentFilter) {
+                case 'unread':
+                    filtered = filtered.filter(a => !a.read);
+                    break;
+                case 'today':
+                    filtered = filtered.filter(a => a.date >= today);
+                    break;
+                case 'this-week':
+                    filtered = filtered.filter(a => a.date >= weekAgo);
+                    break;
+            }
+
+            return filtered.sort((a, b) => b.date - a.date);
+        }
+
+        // Render articles
+        function renderArticles() {
+            const grid = document.getElementById('articlesGrid');
+            const filtered = getFilteredArticles();
+
+            // Update stats
+            document.getElementById('totalArticles').textContent = articles.length;
+            document.getElementById('unreadCount').textContent = articles.filter(a => !a.read).length;
+            document.getElementById('sourceCount').textContent = sources.length;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div class="no-articles">No articles found.</div>';
+                return;
+            }
+
+            grid.innerHTML = filtered.map((article, index) => `
+                <article 
+                    class="article-card" 
+                    style="animation-delay: ${index * 0.05}s"
+                    onclick="openArticle(${article.id}, '${article.url}')"
+                >
+                    <div class="article-source">
+                        <img src="${article.sourceFavicon}" class="source-favicon" onerror="this.style.display='none'">
+                        ${article.source}
+                    </div>
+                    <h3 class="article-title">${article.title}</h3>
+                    <p class="article-excerpt">${article.excerpt}</p>
+                    <div class="article-tags">
+                        ${article.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    </div>
+                    <div class="article-meta">
+                        <span class="article-date">${formatDate(article.date)}</span>
+                        <span style="color: ${article.read ? '#666' : '#ff6b6b'}">
+                            ${article.read ? '✓ Read' : '● New'}
+                        </span>
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        // Format date
+        function formatDate(date) {
+            const now = new Date();
+            const diff = now - date;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+            if (days === 0) return 'Today';
+            if (days === 1) return 'Yesterday';
+            if (days < 7) return `${days} days ago`;
+            
+            const options = { month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        // Open article
+        function openArticle(id, url) {
+            const article = articles.find(a => a.id === id);
+            if (article) {
+                article.read = true;
+                saveToLocalStorage();
+                renderArticles();
+            }
+            window.open(url, '_blank');
+        }
+
+        // Refresh feeds
+        function refreshFeeds() {
+            const grid = document.getElementById('articlesGrid');
+            grid.innerHTML = '<div class="loading">Refreshing feeds...</div>';
+            
+            // Simulate fetching
+            setTimeout(() => {
+                renderArticles();
+            }, 1000);
+        }
+
+        // Manage sources
+        function openManageSources() {
+            renderSourceList();
+            document.getElementById('manageSourcesModal').classList.add('active');
+        }
+
+        function closeManageSources() {
+            document.getElementById('manageSourcesModal').classList.remove('active');
+        }
+
+        function renderSourceList() {
+            const list = document.getElementById('sourceList');
+            list.innerHTML = sources.map(source => `
+                <li class="source-item">
+                    <div class="source-info">
+                        <div class="source-name">${source.name}</div>
+                        <div class="source-url">${source.url}</div>
+                    </div>
+                    <button class="delete-btn" onclick="deleteSource(${source.id})">Delete</button>
+                </li>
+            `).join('');
+        }
+
+        function addSource(e) {
+            e.preventDefault();
+            const name = document.getElementById('sourceName').value;
+            const url = document.getElementById('sourceUrl').value;
+
+            const newSource = {
+                id: Date.now(),
+                name: name,
+                url: url,
+                rss: url,
+                favicon: `https://www.google.com/s2/favicons?domain=${url}`
+            };
+
+            sources.push(newSource);
+            saveToLocalStorage();
+            renderSourceList();
+            renderArticles();
+
+            // Reset form
+            document.getElementById('sourceName').value = '';
+            document.getElementById('sourceUrl').value = '';
+
+            alert(`Added ${name}! Note: You'll need a backend to fetch actual RSS feeds.`);
+        }
+
+        function deleteSource(id) {
+            if (confirm('Are you sure you want to delete this source?')) {
+                sources = sources.filter(s => s.id !== id);
+                saveToLocalStorage();
+                renderSourceList();
+                renderArticles();
+            }
+        }
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
