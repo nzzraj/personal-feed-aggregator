@@ -211,8 +211,8 @@ app.get('/api/articles/:id', async (req, res) => {
   }
 });
 
-// Mark article as read
-app.post('/api/articles/:id/read', async (req, res) => {
+// Mark article as read - CHANGE THIS
+app.put('/api/articles/:id/read', async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
