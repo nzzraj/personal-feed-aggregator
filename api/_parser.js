@@ -15,7 +15,7 @@ async function fetchFeed(feedUrl) {
       link: feed.link,
       items: feed.items.map(item => ({
         title: item.title,
-        link: item.link,
+        url: item.link,
         pubDate: item.pubDate ? new Date(item.pubDate) : new Date(),
         content: item.contentSnippet || item.content || item.description || '',
         creator: item.creator || item['dc:creator'] || feed.title,

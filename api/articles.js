@@ -1,7 +1,6 @@
 const { getPool } = require('./_db');
 
 module.exports = async (req, res) => {
-  // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
@@ -18,7 +17,7 @@ module.exports = async (req, res) => {
   try {
     const pool = getPool();
     const { source_id, unread, limit = 50, offset = 0 } = req.query;
-    
+
     let query = `
       SELECT 
         a.*,
@@ -43,7 +42,7 @@ module.exports = async (req, res) => {
     }
 
     query += ` ORDER BY a.pub_date DESC LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
-    params.push(limit, offset);
+    params.push(parseInt(limit), parseInt(offset));
 
     const result = await pool.query(query, params);
     res.status(200).json(result.rows);

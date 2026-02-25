@@ -1,7 +1,6 @@
 const { getPool } = require('../_db');
 
 module.exports = async (req, res) => {
-  // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,PUT,OPTIONS');
@@ -28,11 +27,11 @@ module.exports = async (req, res) => {
         WHERE a.id = $1`,
         [id]
       );
-      
+
       if (result.rows.length === 0) {
         return res.status(404).json({ error: 'Article not found' });
       }
-      
+
       return res.status(200).json(result.rows[0]);
     }
 
@@ -41,11 +40,11 @@ module.exports = async (req, res) => {
         'UPDATE articles SET read = true WHERE id = $1 RETURNING *',
         [id]
       );
-      
+
       if (result.rows.length === 0) {
         return res.status(404).json({ error: 'Article not found' });
       }
-      
+
       return res.status(200).json(result.rows[0]);
     }
 

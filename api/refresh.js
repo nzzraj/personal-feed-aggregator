@@ -1,8 +1,7 @@
 const { getPool } = require('./_db');
-const { fetchFeed } = require('../new files/_parser');
+const { fetchFeed } = require('./_parser');
 
 module.exports = async (req, res) => {
-  // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
@@ -18,8 +17,7 @@ module.exports = async (req, res) => {
 
   try {
     const pool = getPool();
-    
-    // Get all active sources
+
     const sourcesResult = await pool.query(
       'SELECT * FROM sources WHERE active = true'
     );
@@ -31,7 +29,7 @@ module.exports = async (req, res) => {
     for (const source of sources) {
       try {
         const feedData = await fetchFeed(source.feed_url);
-        
+
         if (!feedData) {
           console.log(`Failed to fetch feed: ${source.name}`);
           continue;
@@ -41,21 +39,22 @@ module.exports = async (req, res) => {
 
         for (const item of feedData.items) {
           try {
-            // Check if article already exists
-            const existingArticle = await pool.query(
-              'SELECT id FROM articles WHERE link = $1',
-              [item.link]
+            if (!item.url) continue;
+
+            // Check if article already exists by URL
+            const existing = await pool.query(
+              'SELECT id FROM articles WHERE url = $1',
+              [item.url]
             );
 
-            if (existingArticle.rows.length === 0) {
-              // Insert new article
+            if (existing.rows.length === 0) {
               await pool.query(
-                `INSERT INTO articles (source_id, title, link, pub_date, content, author)
+                `INSERT INTO articles (source_id, title, url, pub_date, content, author)
                  VALUES ($1, $2, $3, $4, $5, $6)`,
                 [
                   source.id,
                   item.title,
-                  item.link,
+                  item.url,
                   item.pubDate,
                   item.content,
                   item.creator
@@ -64,18 +63,17 @@ module.exports = async (req, res) => {
               totalArticles++;
             }
           } catch (err) {
-            console.error(`Error inserting article: ${item.title}`, err);
+            console.error(`Error inserting article: ${item.title}`, err.message);
           }
         }
 
-        // Update last_fetched timestamp
         await pool.query(
           'UPDATE sources SET last_fetched = NOW() WHERE id = $1',
           [source.id]
         );
 
       } catch (err) {
-        console.error(`Error processing feed ${source.name}:`, err);
+        console.error(`Error processing feed ${source.name}:`, err.message);
       }
     }
 

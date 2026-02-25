@@ -1,7 +1,6 @@
 const { getPool } = require('./_db');
 
 module.exports = async (req, res) => {
-  // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
@@ -15,9 +14,7 @@ module.exports = async (req, res) => {
 
   try {
     if (req.method === 'GET') {
-      const result = await pool.query(
-        'SELECT * FROM sources ORDER BY name'
-      );
+      const result = await pool.query('SELECT * FROM sources ORDER BY name');
       return res.status(200).json(result.rows);
     }
 
@@ -28,7 +25,6 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: 'Name and feed_url are required' });
       }
 
-      // Extract favicon
       let favicon = '';
       if (url) {
         try {
