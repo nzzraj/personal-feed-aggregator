@@ -2,7 +2,15 @@
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#C96442" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1C1917" media="(prefers-color-scheme: dark)">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="ReadFeed">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
   <title>My Reading Feed</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,7 +33,11 @@
     body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:var(--grain-opacity);}
     @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
     @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* ── LAYOUT ── */
     .layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh;position:relative;z-index:1;}
+
+    /* ── LEFT SIDEBAR ── */
     aside{border-right:1px solid var(--border);padding:32px 20px;position:sticky;top:0;height:100vh;overflow-y:auto;background:var(--bg-sidebar);display:flex;flex-direction:column;gap:28px;transition:background 0.3s,border-color 0.3s;}
     .logo{display:flex;flex-direction:column;gap:4px;padding:0 8px;}
     .logo-eyebrow{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--text-3);font-weight:500;}
@@ -36,6 +48,7 @@
     .nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;cursor:pointer;font-size:13.5px;color:var(--text-2);transition:all 0.15s ease;border:1px solid transparent;user-select:none;}
     .nav-item:hover{background:var(--bg-hover);color:var(--text);}
     .nav-item.active{background:var(--accent-bg);color:var(--accent);font-weight:500;border-color:rgba(201,100,66,0.15);}
+    [data-theme="dark"] .nav-item.active{border-color:rgba(224,122,85,0.2);}
     .nav-icon{font-size:14px;opacity:0.7;width:18px;text-align:center;}
     .nav-count{margin-left:auto;font-size:11px;background:var(--tag-bg);color:var(--tag-text);padding:2px 7px;border-radius:10px;font-weight:500;transition:background 0.3s,color 0.3s;}
     .nav-item.active .nav-count{background:rgba(201,100,66,0.15);color:var(--accent);}
@@ -45,6 +58,14 @@
     .source-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;transition:transform 0.2s;}
     .source-nav-item:hover .source-dot{transform:scale(1.4);}
     .sidebar-bottom{margin-top:auto;display:flex;flex-direction:column;gap:8px;}
+    .refresh-btn{width:100%;padding:10px 16px;background:var(--text);color:var(--bg);border:none;border-radius:8px;font-size:13px;font-weight:500;font-family:'Figtree',sans-serif;cursor:pointer;transition:all 0.2s ease;display:flex;align-items:center;justify-content:center;gap:8px;}
+    .refresh-btn:hover{background:var(--accent);box-shadow:0 4px 14px rgba(201,100,66,0.35);transform:translateY(-1px);}
+    .refresh-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;box-shadow:none;}
+    .refresh-btn .spin{display:inline-block;animation:spin 0.8s linear infinite;}
+    .manage-btn{width:100%;padding:10px 16px;background:transparent;color:var(--text-2);border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'Figtree',sans-serif;cursor:pointer;transition:all 0.2s ease;}
+    .manage-btn:hover{border-color:var(--text-3);color:var(--text);background:var(--bg-hover);}
+
+    /* ── THEME TOGGLE ── */
     .theme-btn{position:fixed;top:20px;right:24px;z-index:50;background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s ease;box-shadow:0 2px 8px var(--shadow);}
     .theme-btn:hover{border-color:var(--accent);}
     .theme-btn-icon{font-size:14px;line-height:1;}
@@ -52,38 +73,36 @@
     [data-theme="dark"] .toggle-track{background:var(--accent);}
     .toggle-thumb{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:white;transition:transform 0.3s ease;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
     [data-theme="dark"] .toggle-thumb{transform:translateX(14px);}
-    .refresh-btn{width:100%;padding:10px 16px;background:var(--text);color:var(--bg);border:none;border-radius:8px;font-size:13px;font-weight:500;font-family:'Figtree',sans-serif;cursor:pointer;transition:all 0.2s ease;display:flex;align-items:center;justify-content:center;gap:8px;}
-    .refresh-btn:hover{background:var(--accent);box-shadow:0 4px 14px rgba(201,100,66,0.35);transform:translateY(-1px);}
-    .refresh-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;box-shadow:none;}
-    .refresh-btn .spin{display:inline-block;animation:spin 0.8s linear infinite;}
-    .manage-btn{width:100%;padding:10px 16px;background:transparent;color:var(--text-2);border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'Figtree',sans-serif;cursor:pointer;transition:all 0.2s ease;}
-    .manage-btn:hover{border-color:var(--text-3);color:var(--text);background:var(--bg-hover);}
-    main{padding:44px 52px;max-width:900px;}
-    .main-header{margin-bottom:28px;animation:fadeUp 0.5s ease-out 0.1s both;}
-    .main-header-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px;}
+
+    /* ── MAIN ── */
+    main{padding:40px 60px;max-width:780px;width:100%;margin:0 auto;}
+    .main-header{margin-bottom:24px;animation:fadeUp 0.5s ease-out 0.1s both;}
+    .main-header-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px;}
     .section-title{font-family:'Lora',serif;font-size:26px;font-weight:500;color:var(--text);}
     .section-title span{color:var(--accent);font-style:italic;}
     .date-badge{font-size:12px;color:var(--text-3);letter-spacing:0.3px;}
-    .search-row{margin:20px 0;animation:fadeUp 0.5s ease-out 0.2s both;}
+    .search-row{margin:16px 0 0;animation:fadeUp 0.5s ease-out 0.2s both;}
     .search-wrap{position:relative;}
     .search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:15px;pointer-events:none;}
     .search-input{width:100%;padding:10px 16px 10px 36px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);font-family:'Figtree',sans-serif;transition:all 0.2s ease;}
     .search-input::placeholder{color:var(--text-3);}
     .search-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(201,100,66,0.1);}
-    .filter-tabs{display:flex;gap:5px;margin-bottom:24px;animation:fadeUp 0.5s ease-out 0.25s both;}
+    .filter-tabs{display:flex;gap:5px;margin:16px 0 20px;animation:fadeUp 0.5s ease-out 0.25s both;}
     .tab{padding:7px 15px;border-radius:6px;font-size:13px;cursor:pointer;border:1px solid transparent;color:var(--text-2);background:transparent;font-family:'Figtree',sans-serif;transition:all 0.15s ease;}
     .tab:hover{background:var(--bg-hover);color:var(--text);}
     .tab.active{background:var(--accent-bg);color:var(--accent);border-color:rgba(201,100,66,0.2);font-weight:500;}
+
+    /* ── ARTICLES ── */
     .articles{display:flex;flex-direction:column;gap:1px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--border);animation:fadeUp 0.5s ease-out 0.3s both;transition:border-color 0.3s;}
     .section-divider{padding:9px 24px;background:var(--bg);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-3);font-weight:500;transition:background 0.3s;}
-    .article-card{background:var(--bg-card);padding:20px 24px;cursor:pointer;transition:background 0.15s ease;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start;border-left:3px solid transparent;}
+    .article-card{background:var(--bg-card);padding:18px 22px;cursor:pointer;transition:background 0.15s ease;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start;border-left:3px solid transparent;}
     .article-card:hover{background:var(--bg-hover);}
     .article-card.unread{border-left-color:var(--accent);}
-    .card-source{font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-3);font-weight:500;margin-bottom:5px;display:flex;align-items:center;gap:6px;}
+    .card-source{font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-3);font-weight:500;margin-bottom:4px;display:flex;align-items:center;gap:6px;}
     .card-source-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
-    .card-title{font-family:'Lora',serif;font-size:16px;font-weight:500;color:var(--text);line-height:1.4;margin-bottom:6px;}
+    .card-title{font-family:'Lora',serif;font-size:15.5px;font-weight:500;color:var(--text);line-height:1.4;margin-bottom:5px;}
     .article-card.read .card-title{color:var(--text-2);font-weight:400;}
-    .card-excerpt{font-size:13px;line-height:1.65;color:var(--text-2);font-weight:300;}
+    .card-excerpt{font-size:13px;line-height:1.6;color:var(--text-2);font-weight:300;}
     .card-meta{display:flex;flex-direction:column;align-items:flex-end;gap:7px;flex-shrink:0;}
     .card-date{font-size:11.5px;color:var(--text-3);white-space:nowrap;}
     .card-badge{font-size:10px;padding:3px 8px;border-radius:10px;font-weight:500;}
@@ -91,6 +110,42 @@
     .badge-read{background:var(--tag-bg);color:var(--tag-text);}
     .empty-state{padding:60px 24px;text-align:center;color:var(--text-3);font-size:14px;background:var(--bg-card);}
     .empty-state p{margin-top:8px;font-size:13px;color:var(--text-3);}
+
+    /* ── RIGHT PANEL ── */
+    .right-panel{border-left:1px solid var(--border);padding:32px 20px;position:sticky;top:0;height:100vh;overflow-y:auto;background:var(--bg-sidebar);display:flex;flex-direction:column;gap:24px;transition:background 0.3s,border-color 0.3s;}
+    .panel-section{display:flex;flex-direction:column;gap:10px;}
+    .panel-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-3);font-weight:500;}
+
+    /* Reading progress ring */
+    .progress-widget{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:10px;transition:background 0.3s,border-color 0.3s;}
+    .progress-ring-wrap{position:relative;width:80px;height:80px;}
+    .progress-ring{transform:rotate(-90deg);}
+    .progress-ring-bg{fill:none;stroke:var(--border);stroke-width:6;}
+    .progress-ring-fill{fill:none;stroke:var(--accent);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset 0.8s ease;}
+    .progress-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+    .progress-pct{font-family:'Lora',serif;font-size:18px;font-weight:600;color:var(--text);line-height:1;}
+    .progress-sub{font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+    .progress-label{font-size:12px;color:var(--text-2);text-align:center;line-height:1.4;}
+    .progress-label strong{color:var(--text);font-weight:600;}
+
+    /* Stat pills */
+    .stat-pills{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    .stat-pill{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px 10px;text-align:center;transition:background 0.3s,border-color 0.3s;}
+    .stat-pill-num{font-family:'Lora',serif;font-size:22px;font-weight:600;color:var(--text);display:block;line-height:1;margin-bottom:3px;}
+    .stat-pill-lbl{font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:1.5px;font-weight:500;}
+
+    /* Top sources */
+    .top-source-item{display:flex;align-items:center;gap:8px;padding:6px 0;}
+    .top-source-bar-wrap{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+    .top-source-bar{height:100%;border-radius:2px;background:var(--accent);transition:width 0.6s ease;}
+    .top-source-name{font-size:12px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;}
+    .top-source-count{font-size:11px;color:var(--text-3);font-weight:500;flex-shrink:0;}
+
+    /* Last refreshed */
+    .last-refresh{font-size:11.5px;color:var(--text-3);padding:10px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;text-align:center;line-height:1.5;transition:background 0.3s,border-color 0.3s;}
+    .last-refresh strong{color:var(--text-2);display:block;font-size:12px;margin-bottom:2px;}
+
+    /* ── MODAL ── */
     .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
     .modal-overlay.active{display:flex;}
     .modal{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:36px;width:90%;max-width:540px;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px var(--shadow);animation:fadeUp 0.25s ease-out;}
@@ -112,14 +167,41 @@
     .add-btn{padding:10px 16px;background:var(--accent);color:white;border:none;border-radius:7px;font-size:13px;font-weight:500;font-family:'Figtree',sans-serif;cursor:pointer;transition:all 0.2s;}
     .add-btn:hover{background:var(--accent-2);transform:translateY(-1px);}
     .add-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
-    .toast{position:fixed;bottom:24px;right:24px;padding:12px 18px;background:var(--text);color:var(--bg);border-radius:8px;font-size:13px;font-weight:500;z-index:200;opacity:0;transform:translateY(8px);transition:all 0.3s ease;pointer-events:none;font-family:'Figtree',sans-serif;}
-    .toast.show{opacity:1;transform:translateY(0);}
-    @media(max-width:768px){.layout{grid-template-columns:1fr;}aside{position:relative;height:auto;}main{padding:24px 20px;}}
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);padding:11px 20px;background:var(--text);color:var(--bg);border-radius:8px;font-size:13px;font-weight:500;z-index:200;opacity:0;transition:all 0.3s ease;pointer-events:none;font-family:'Figtree',sans-serif;white-space:nowrap;}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+    @media(max-width:900px){.layout{grid-template-columns:1fr;}.right-panel{display:none;}aside{position:relative;height:auto;}main{padding:24px 20px;}}
+
+    /* ── MOBILE BOTTOM NAV ── */
+    .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:60;background:var(--bg-card);border-top:1px solid var(--border);padding:8px 0 max(8px, env(safe-area-inset-bottom));display:none;grid-template-columns:repeat(5,1fr);transition:background 0.3s,border-color 0.3s;}
+    .mob-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;border:none;background:none;color:var(--text-3);font-family:'Figtree',sans-serif;font-size:10px;font-weight:500;transition:color 0.15s;-webkit-tap-highlight-color:transparent;}
+    .mob-btn.active{color:var(--accent);}
+    .mob-btn:active{opacity:0.7;}
+    .mob-icon{font-size:18px;line-height:1;}
+    @media(max-width:768px){
+      .layout{grid-template-columns:1fr;}
+      aside{display:none;}
+      .right-panel{display:none;}
+      main{padding:20px 16px 90px;}
+      .mobile-nav{display:grid;}
+      .theme-btn{top:14px;right:14px;}
+      .main-header-top{flex-direction:column;gap:4px;align-items:flex-start;}
+      .filter-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;flex-wrap:nowrap;}
+      .tab{white-space:nowrap;}
+      .modal{padding:24px 20px;max-height:90vh;border-radius:20px 20px 0 0;width:100%;position:fixed;bottom:0;left:0;right:0;margin:0;}
+      .modal-overlay{align-items:flex-end;}
+    }
   </style>
 </head>
 <body>
-<button class="theme-btn" onclick="toggleTheme()" title="Toggle dark mode"><span class="theme-btn-icon" id="themeIcon">☽</span><div class="toggle-track"><div class="toggle-thumb"></div></div></button>
+
+<button class="theme-btn" onclick="toggleTheme()" title="Toggle dark mode">
+  <span class="theme-btn-icon" id="themeIcon">☽</span>
+  <div class="toggle-track"><div class="toggle-thumb"></div></div>
+</button>
+
 <div class="layout">
+
+  <!-- LEFT SIDEBAR -->
   <aside>
     <div class="logo">
       <span class="logo-eyebrow">Personal</span>
@@ -145,19 +227,18 @@
       <div class="sources-list" id="sidebarSources"></div>
     </div>
     <div class="sidebar-bottom">
-
       <button class="refresh-btn" id="refreshBtn" onclick="refreshFeeds()">↻ &nbsp;Refresh Feeds</button>
       <button class="manage-btn" onclick="openModal()">⚙ Manage Sources</button>
     </div>
   </aside>
 
+  <!-- MAIN -->
   <main>
     <div class="main-header">
       <div class="main-header-top">
         <h1 class="section-title" id="sectionTitle">All <span>Articles</span></h1>
         <span class="date-badge" id="dateBadge"></span>
       </div>
-
     </div>
     <div class="search-row">
       <div class="search-wrap">
@@ -173,8 +254,64 @@
     </div>
     <div class="articles" id="articlesList"></div>
   </main>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+
+    <div class="panel-section">
+      <div class="panel-label">Read progress</div>
+      <div class="progress-widget">
+        <div class="progress-ring-wrap">
+          <svg class="progress-ring" width="80" height="80" viewBox="0 0 80 80">
+            <circle class="progress-ring-bg" cx="40" cy="40" r="34"/>
+            <circle class="progress-ring-fill" id="progressRing" cx="40" cy="40" r="34"
+              stroke-dasharray="213.6" stroke-dashoffset="213.6"/>
+          </svg>
+          <div class="progress-center">
+            <span class="progress-pct" id="progressPct">0%</span>
+          </div>
+        </div>
+        <div class="progress-label" id="progressLabel">Loading…</div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-label">Overview</div>
+      <div class="stat-pills">
+        <div class="stat-pill">
+          <span class="stat-pill-num" id="rp-total">0</span>
+          <span class="stat-pill-lbl">Total</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-pill-num" id="rp-unread">0</span>
+          <span class="stat-pill-lbl">Unread</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-pill-num" id="rp-today">0</span>
+          <span class="stat-pill-lbl">Today</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-pill-num" id="rp-sources">0</span>
+          <span class="stat-pill-lbl">Sources</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-label">Top sources</div>
+      <div id="topSources"></div>
+    </div>
+
+    <div class="panel-section" style="margin-top:auto">
+      <div class="last-refresh" id="lastRefresh">
+        <strong>Last refreshed</strong>Never
+      </div>
+    </div>
+
+  </div>
 </div>
 
+<!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModalOnBg(event)">
   <div class="modal">
     <div class="modal-header">
@@ -200,8 +337,7 @@ const COLORS=['#C96442','#6B8F71','#5B7FA6','#9B7AB0','#C4963A','#7A8F6B','#A06B
 let articles=[],sources=[],currentFilter='all',searchTerm='',activeSource=null;
 
 function init(){
-  setDate();restoreTheme();
-  loadData();
+  setDate();restoreTheme();loadData();
   document.getElementById('searchInput').addEventListener('input',e=>{searchTerm=e.target.value.toLowerCase();render();});
 }
 function setDate(){
@@ -250,7 +386,7 @@ function render(){
 }
 function cardHtml(a){
   const idx=sources.findIndex(s=>s.id==a.source_id);const color=COLORS[Math.max(0,idx)%COLORS.length];
-  const excerpt=(a.excerpt||a.content||'').replace(/<[^>]*>/g,'').substring(0,160);
+  const excerpt=(a.excerpt||a.content||'').replace(/<[^>]*>/g,'').substring(0,140);
   return`<div class="article-card ${a.read?'read':'unread'}" onclick="openArticle(${a.id},'${esc(a.url||'')}')"><div><div class="card-source" style="color:${color}"><div class="card-source-dot" style="background:${color}"></div>${esc(a.source_name||'Unknown')}</div><div class="card-title">${esc(a.title||'')}</div>${excerpt?`<div class="card-excerpt">${esc(excerpt)}…</div>`:''}</div><div class="card-meta"><span class="card-date">${relDate(new Date(a.pub_date||a.created_at))}</span><span class="card-badge ${a.read?'badge-read':'badge-new'}">${a.read?'Read':'New'}</span></div></div>`;
 }
 function renderSidebar(){
@@ -259,11 +395,44 @@ function renderSidebar(){
 function updateStats(){
   const now=new Date(),today=new Date(now.getFullYear(),now.getMonth(),now.getDate()),week=new Date(today);
   week.setDate(week.getDate()-7);
-  const u=articles.filter(a=>!a.read).length,t=articles.filter(a=>new Date(a.pub_date||a.created_at)>=today).length,w=articles.filter(a=>new Date(a.pub_date||a.created_at)>=week).length;
-  document.getElementById('count-all').textContent=articles.length;
+  const total=articles.length,u=articles.filter(a=>!a.read).length,read=total-u;
+  const t=articles.filter(a=>new Date(a.pub_date||a.created_at)>=today).length;
+  const w=articles.filter(a=>new Date(a.pub_date||a.created_at)>=week).length;
+
+  // sidebar counts
+  document.getElementById('count-all').textContent=total;
   document.getElementById('count-unread').textContent=u;
   document.getElementById('count-today').textContent=t;
   document.getElementById('count-week').textContent=w;
+
+  // right panel pills
+  document.getElementById('rp-total').textContent=total;
+  document.getElementById('rp-unread').textContent=u;
+  document.getElementById('rp-today').textContent=t;
+  document.getElementById('rp-sources').textContent=sources.length;
+
+  // progress ring
+  const pct=total>0?Math.round((read/total)*100):0;
+  const circ=213.6,offset=circ-(pct/100)*circ;
+  document.getElementById('progressRing').style.strokeDashoffset=offset;
+  document.getElementById('progressPct').textContent=pct+'%';
+  document.getElementById('progressLabel').innerHTML=total>0
+    ?`<strong>${read}</strong> of ${total} read`
+    :'No articles yet';
+
+  // top sources
+  const counts={};
+  articles.forEach(a=>{if(a.source_name)counts[a.source_name]=(counts[a.source_name]||0)+1;});
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const max=sorted[0]?sorted[0][1]:1;
+  document.getElementById('topSources').innerHTML=sorted.length
+    ?sorted.map(([name,cnt],i)=>`
+      <div class="top-source-item">
+        <div class="top-source-name" title="${esc(name)}" style="color:${COLORS[i%COLORS.length]}">${esc(name)}</div>
+        <div class="top-source-bar-wrap"><div class="top-source-bar" style="width:${Math.round((cnt/max)*100)}%;background:${COLORS[i%COLORS.length]}"></div></div>
+        <div class="top-source-count">${cnt}</div>
+      </div>`).join('')
+    :'<div style="font-size:12px;color:var(--text-3)">No data yet</div>';
 }
 async function openArticle(id,url){
   try{await fetch(`${API_URL}/api/articles/${id}/read`,{method:'PUT'});const a=articles.find(x=>x.id===id);if(a){a.read=true;render();}}catch{}
@@ -271,8 +440,14 @@ async function openArticle(id,url){
 }
 async function refreshFeeds(){
   const btn=document.getElementById('refreshBtn');btn.disabled=true;btn.innerHTML='<span class="spin">↻</span> &nbsp;Refreshing…';
-  try{const r=await fetch(`${API_URL}/api/refresh`,{method:'POST'});if(!r.ok)throw 0;const d=await r.json();await loadData();toast(`✓ ${d.newArticles} new articles added`);btn.innerHTML='✓ &nbsp;Done!';setTimeout(()=>{btn.innerHTML='↻ &nbsp;Refresh Feeds';btn.disabled=false;},2500);}
-  catch{toast('Error refreshing. Please try again.');btn.innerHTML='↻ &nbsp;Refresh Feeds';btn.disabled=false;}
+  try{
+    const r=await fetch(`${API_URL}/api/refresh`,{method:'POST'});if(!r.ok)throw 0;
+    const d=await r.json();await loadData();
+    const now=new Date();
+    document.getElementById('lastRefresh').innerHTML=`<strong>Last refreshed</strong>${now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}`;
+    toast(`✓ ${d.newArticles} new articles added`);
+    btn.innerHTML='✓ &nbsp;Done!';setTimeout(()=>{btn.innerHTML='↻ &nbsp;Refresh Feeds';btn.disabled=false;},2500);
+  }catch{toast('Error refreshing. Please try again.');btn.innerHTML='↻ &nbsp;Refresh Feeds';btn.disabled=false;}
 }
 function openModal(){renderSourceList();document.getElementById('modalOverlay').classList.add('active');}
 function closeModal(){document.getElementById('modalOverlay').classList.remove('active');}
@@ -320,6 +495,36 @@ function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/<
 function showEmpty(msg){document.getElementById('articlesList').innerHTML=`<div class="empty-state">${msg}</div>`;}
 let _tt;function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),3000);}
 init();
+
+// ── PWA SERVICE WORKER ──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
+function mobFilter(f) {
+  document.querySelectorAll('.mob-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('mob-' + f).classList.add('active');
+  setFilter(f, document.querySelector(`[data-filter="${f}"]`) || document.createElement('div'));
+}
 </script>
+  <nav class="mobile-nav" id="mobileNav">
+    <button class="mob-btn active" id="mob-all" onclick="mobFilter('all')">
+      <span class="mob-icon">◈</span>All
+    </button>
+    <button class="mob-btn" id="mob-unread" onclick="mobFilter('unread')">
+      <span class="mob-icon">○</span>Unread
+    </button>
+    <button class="mob-btn" id="mob-today" onclick="mobFilter('today')">
+      <span class="mob-icon">◷</span>Today
+    </button>
+    <button class="mob-btn" id="mob-refresh" onclick="refreshFeeds()">
+      <span class="mob-icon" id="mobRefreshIcon">↻</span>Refresh
+    </button>
+    <button class="mob-btn" id="mob-sources" onclick="openModal()">
+      <span class="mob-icon">⚙</span>Sources
+    </button>
+  </nav>
 </body>
 </html>
