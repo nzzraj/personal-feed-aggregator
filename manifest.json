@@ -1,0 +1,25 @@
+{
+  "name": "My Reading Feed",
+  "short_name": "ReadFeed",
+  "description": "Your personal RSS feed reader",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F2EFE9",
+  "theme_color": "#C96442",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["news", "productivity"]
+}
