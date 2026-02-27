@@ -35,7 +35,7 @@
     @keyframes spin{to{transform:rotate(360deg)}}
 
     /* ── LAYOUT ── */
-    .layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh;position:relative;z-index:1;}
+    .layout{display:grid;grid-template-columns:260px 1fr 260px;min-height:100vh;position:relative;z-index:1;transition:grid-template-columns 0.35s cubic-bezier(0.4,0,0.2,1);} .layout.panel-hidden{grid-template-columns:260px 1fr 0px;}
 
     /* ── LEFT SIDEBAR ── */
     aside{border-right:1px solid var(--border);padding:32px 20px;position:sticky;top:0;height:100vh;overflow-y:auto;background:var(--bg-sidebar);display:flex;flex-direction:column;gap:28px;transition:background 0.3s,border-color 0.3s;}
@@ -75,7 +75,7 @@
     [data-theme="dark"] .toggle-thumb{transform:translateX(14px);}
 
     /* ── MAIN ── */
-    main{padding:40px 60px;max-width:780px;width:100%;margin:0 auto;}
+    main{padding:40px 40px;width:100%;}
     .main-header{margin-bottom:24px;animation:fadeUp 0.5s ease-out 0.1s both;}
     .main-header-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px;}
     .section-title{font-family:'Lora',serif;font-size:26px;font-weight:500;color:var(--text);}
@@ -112,7 +112,7 @@
     .empty-state p{margin-top:8px;font-size:13px;color:var(--text-3);}
 
     /* ── RIGHT PANEL ── */
-    .right-panel{border-left:1px solid var(--border);padding:32px 20px;position:sticky;top:0;height:100vh;overflow-y:auto;background:var(--bg-sidebar);display:flex;flex-direction:column;gap:24px;transition:background 0.3s,border-color 0.3s;}
+    .right-panel{border-left:1px solid var(--border);padding:32px 20px;position:sticky;top:0;height:100vh;overflow-y:auto;overflow-x:hidden;background:var(--bg-sidebar);display:flex;flex-direction:column;gap:24px;transition:background 0.3s,border-color 0.3s,padding 0.35s;min-width:0;} .layout.panel-hidden .right-panel{padding:0;border-left:none;overflow:hidden;}
     .panel-section{display:flex;flex-direction:column;gap:10px;}
     .panel-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-3);font-weight:500;}
 
@@ -171,6 +171,10 @@
     .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
     @media(max-width:900px){.layout{grid-template-columns:1fr;}.right-panel{display:none;}aside{position:relative;height:auto;}main{padding:24px 20px;}}
 
+
+    /* ── PANEL TOGGLE ── */
+    .panel-toggle{background:none;border:none;cursor:pointer;color:var(--text-3);padding:4px 6px;border-radius:5px;font-size:16px;line-height:1;transition:all 0.15s ease;margin-left:8px;flex-shrink:0;}
+    .panel-toggle:hover{background:var(--bg-hover);color:var(--text);}
     /* ── MOBILE BOTTOM NAV ── */
     .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:60;background:var(--bg-card);border-top:1px solid var(--border);padding:8px 0 max(8px, env(safe-area-inset-bottom));display:none;grid-template-columns:repeat(5,1fr);transition:background 0.3s,border-color 0.3s;}
     .mob-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;border:none;background:none;color:var(--text-3);font-family:'Figtree',sans-serif;font-size:10px;font-weight:500;transition:color 0.15s;-webkit-tap-highlight-color:transparent;}
@@ -237,7 +241,7 @@
     <div class="main-header">
       <div class="main-header-top">
         <h1 class="section-title" id="sectionTitle">All <span>Articles</span></h1>
-        <span class="date-badge" id="dateBadge"></span>
+        <div style="display:flex;align-items:center;gap:4px"><span class="date-badge" id="dateBadge"></span><button class="panel-toggle" id="panelToggle" onclick="togglePanel()" title="Toggle panel"><span id="panelArrow">›</span></button></div>
       </div>
     </div>
     <div class="search-row">
@@ -494,6 +498,20 @@ function relDate(d){
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function showEmpty(msg){document.getElementById('articlesList').innerHTML=`<div class="empty-state">${msg}</div>`;}
 let _tt;function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),3000);}
+
+// ── PANEL TOGGLE ──
+function togglePanel() {
+  const hidden = document.querySelector('.layout').classList.toggle('panel-hidden');
+  document.getElementById('panelArrow').textContent = hidden ? '‹' : '›';
+  localStorage.setItem('panelHidden', hidden ? '1' : '0');
+}
+function restorePanel() {
+  if (localStorage.getItem('panelHidden') === '1') {
+    document.querySelector('.layout').classList.add('panel-hidden');
+    document.getElementById('panelArrow').textContent = '‹';
+  }
+}
+restorePanel();
 init();
 
 // ── PWA SERVICE WORKER ──
