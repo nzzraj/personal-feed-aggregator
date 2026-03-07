@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "routes": [
+    {
+      "src": "/api/articles/([^/]+)",
+      "dest": "/api/articles/[id]"
+    },
+    {
+      "src": "/api/sources/([^/]+)",
+      "dest": "/api/sources/[id]"
+    }
+  ]
+}

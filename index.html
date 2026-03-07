@@ -117,7 +117,6 @@
     .panel-section{display:flex;flex-direction:column;gap:10px;}
     .panel-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-3);font-weight:500;}
 
-    /* Reading progress ring */
     .progress-widget{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:10px;transition:background 0.3s,border-color 0.3s;}
     .progress-ring-wrap{position:relative;width:80px;height:80px;}
     .progress-ring{transform:rotate(-90deg);}
@@ -129,20 +128,17 @@
     .progress-label{font-size:12px;color:var(--text-2);text-align:center;line-height:1.4;}
     .progress-label strong{color:var(--text);font-weight:600;}
 
-    /* Stat pills */
     .stat-pills{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
     .stat-pill{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px 10px;text-align:center;transition:background 0.3s,border-color 0.3s;}
     .stat-pill-num{font-family:'Lora',serif;font-size:22px;font-weight:600;color:var(--text);display:block;line-height:1;margin-bottom:3px;}
     .stat-pill-lbl{font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:1.5px;font-weight:500;}
 
-    /* Top sources */
     .top-source-item{display:flex;align-items:center;gap:8px;padding:6px 0;}
     .top-source-bar-wrap{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
     .top-source-bar{height:100%;border-radius:2px;background:var(--accent);transition:width 0.6s ease;}
     .top-source-name{font-size:12px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;}
     .top-source-count{font-size:11px;color:var(--text-3);font-weight:500;flex-shrink:0;}
 
-    /* Last refreshed */
     .last-refresh{font-size:11.5px;color:var(--text-3);padding:10px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;text-align:center;line-height:1.5;transition:background 0.3s,border-color 0.3s;}
     .last-refresh strong{color:var(--text-2);display:block;font-size:12px;margin-bottom:2px;}
 
@@ -175,7 +171,7 @@
     /* ── PANEL TOGGLE ── */
     .panel-toggle{background:none;border:none;cursor:pointer;color:var(--text-3);padding:4px 6px;border-radius:5px;font-size:16px;line-height:1;transition:all 0.15s ease;margin-left:8px;flex-shrink:0;}
     .panel-toggle:hover{background:var(--bg-hover);color:var(--text);}
-    
+
     /* ── MOBILE BOTTOM NAV ── */
     .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:60;background:var(--bg-card);border-top:1px solid var(--border);padding:8px 0 max(8px, env(safe-area-inset-bottom));grid-template-columns:repeat(5,1fr);transition:background 0.3s,border-color 0.3s;}
     .mob-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;border:none;background:none;color:var(--text-3);font-family:'Figtree',sans-serif;font-size:10px;font-weight:500;transition:color 0.15s;-webkit-tap-highlight-color:transparent;}
@@ -192,8 +188,6 @@
       .mobile-nav{display:grid;}
       .theme-btn{top:14px;right:14px;}
       .main-header-top{flex-direction:column;gap:4px;align-items:flex-start;}
-      .filter-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;flex-wrap:nowrap;}
-      .tab{white-space:nowrap;}
       .modal{padding:24px 20px;max-height:90vh;border-radius:20px 20px 0 0;width:100%;position:fixed;bottom:0;left:0;right:0;margin:0;}
       .modal-overlay{align-items:flex-end;}
     }
@@ -264,7 +258,6 @@
 
   <!-- RIGHT PANEL -->
   <div class="right-panel">
-
     <div class="panel-section">
       <div class="panel-label">Read progress</div>
       <div class="progress-widget">
@@ -285,22 +278,10 @@
     <div class="panel-section">
       <div class="panel-label">Overview</div>
       <div class="stat-pills">
-        <div class="stat-pill">
-          <span class="stat-pill-num" id="rp-total">0</span>
-          <span class="stat-pill-lbl">Total</span>
-        </div>
-        <div class="stat-pill">
-          <span class="stat-pill-num" id="rp-unread">0</span>
-          <span class="stat-pill-lbl">Unread</span>
-        </div>
-        <div class="stat-pill">
-          <span class="stat-pill-num" id="rp-today">0</span>
-          <span class="stat-pill-lbl">Today</span>
-        </div>
-        <div class="stat-pill">
-          <span class="stat-pill-num" id="rp-sources">0</span>
-          <span class="stat-pill-lbl">Sources</span>
-        </div>
+        <div class="stat-pill"><span class="stat-pill-num" id="rp-total">0</span><span class="stat-pill-lbl">Total</span></div>
+        <div class="stat-pill"><span class="stat-pill-num" id="rp-unread">0</span><span class="stat-pill-lbl">Unread</span></div>
+        <div class="stat-pill"><span class="stat-pill-num" id="rp-today">0</span><span class="stat-pill-lbl">Today</span></div>
+        <div class="stat-pill"><span class="stat-pill-num" id="rp-sources">0</span><span class="stat-pill-lbl">Sources</span></div>
       </div>
     </div>
 
@@ -310,11 +291,8 @@
     </div>
 
     <div class="panel-section" style="margin-top:auto">
-      <div class="last-refresh" id="lastRefresh">
-        <strong>Last refreshed</strong>Never
-      </div>
+      <div class="last-refresh" id="lastRefresh"><strong>Last refreshed</strong>Never</div>
     </div>
-
   </div>
 </div>
 
@@ -329,26 +307,25 @@
     <ul class="source-list" id="sourceList"></ul>
     <div class="modal-section-title">Add New Source</div>
     <div class="add-form">
-      <input type="text" class="form-input" id="sourceName"    placeholder="Source name">
-      <input type="url"  class="form-input" id="sourceUrl"     placeholder="Website URL (optional)">
-      <input type="url"  class="form-input" id="sourceFeedUrl" placeholder="RSS Feed URL (required)">
+      <input type="text" class="form-input" id="sourceName"    placeholder="Source name (e.g. Paul Graham)">
+      <input type="url"  class="form-input" id="sourceUrl"     placeholder="Website URL (optional, e.g. https://paulgraham.com)">
+      <input type="url"  class="form-input" id="sourceFeedUrl" placeholder="RSS Feed URL (required, e.g. https://paulgraham.com/rss.html)">
       <button class="add-btn" id="addBtn" onclick="addSource()">+ Add Source</button>
     </div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
 
-
 <script>
 // ========== API CONFIGURATION ==========
-// FIX: Use the correct production domain
-const API_BASE = 'https://myreadfeed.vercel.app';
-const API_KEY = localStorage.getItem('api_key') || '5cbbe097edc4435bba90114ab1c05799';
+// Use relative URLs so it works on any domain (no hardcoded URL needed)
+const API_BASE = '';
+const API_KEY = '5cbbe097edc4435bba90114ab1c05799';
 
 async function apiCall(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`;
   const isGet = (options.method || 'GET') === 'GET';
-  
+
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers
@@ -358,19 +335,14 @@ async function apiCall(endpoint, options = {}) {
     headers['Authorization'] = `Bearer ${API_KEY}`;
   }
 
-  try {
-    const response = await fetch(url, { ...options, headers });
+  const response = await fetch(url, { ...options, headers });
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.error || `HTTP ${response.status}`);
-    }
-
-    return response.json();
-  } catch (error) {
-    console.error(`API call failed: ${endpoint}`, error);
-    throw error;
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || `HTTP ${response.status}`);
   }
+
+  return response.json();
 }
 
 // ========== APP STATE ==========
@@ -380,7 +352,9 @@ let articles=[],sources=[],currentFilter='all',searchTerm='',activeSource=null;
 // ========== INITIALIZATION ==========
 function init(){
   setDate();restoreTheme();loadData();
-  document.getElementById('searchInput').addEventListener('input',e=>{searchTerm=e.target.value.toLowerCase();render();});
+  document.getElementById('searchInput').addEventListener('input',e=>{
+    searchTerm=e.target.value.toLowerCase();render();
+  });
 }
 
 function setDate(){
@@ -394,10 +368,10 @@ async function loadData(){
 async function loadArticles(){
   try{
     const data = await apiCall('/api/articles');
-    articles = Array.isArray(data.articles) ? data.articles : data;
+    articles = Array.isArray(data.articles) ? data.articles : (Array.isArray(data) ? data : []);
     render();
   }catch(e){
-    showEmpty('Could not load articles. Try refreshing.');
+    showEmpty('Could not load articles. Check your connection.');
     console.error('Load articles failed:', e);
   }
 }
@@ -419,7 +393,7 @@ function setFilter(f,el){
   document.querySelectorAll('.nav-item,.tab').forEach(e=>e.classList.remove('active'));
   document.querySelectorAll(`[data-filter="${f}"]`).forEach(e=>e.classList.add('active'));
   const t={all:'All',unread:'Unread',today:'Today',week:'This Week'};
-  document.getElementById('sectionTitle').innerHTML=`${t[f]} <span>Articles</span>`;
+  document.getElementById('sectionTitle').innerHTML=`${t[f]||f} <span>Articles</span>`;
   render();
 }
 
@@ -432,7 +406,7 @@ function filterBySource(id,name){
 
 function getFiltered(){
   let list=[...articles];
-  if(activeSource!==null)list=list.filter(a=>a.source_id==activeSource);
+  if(activeSource!==null)list=list.filter(a=>String(a.source_id)===String(activeSource));
   if(searchTerm)list=list.filter(a=>(a.title||'').toLowerCase().includes(searchTerm)||(a.excerpt||'').toLowerCase().includes(searchTerm));
   const now=new Date(),today=new Date(now.getFullYear(),now.getMonth(),now.getDate()),week=new Date(today);
   week.setDate(week.getDate()-7);
@@ -443,18 +417,24 @@ function getFiltered(){
 }
 
 function render(){
-  updateStats();const list=getFiltered();const el=document.getElementById('articlesList');
-  if(!list.length){el.innerHTML=`<div class="empty-state"><div style="font-size:28px;margin-bottom:8px">◌</div>No articles found.<p>${articles.length===0?'Click "Refresh Feeds" to fetch articles.':'Try a different filter.'}</p></div>`;return;}
+  updateStats();
+  const list=getFiltered();
+  const el=document.getElementById('articlesList');
+  if(!list.length){
+    el.innerHTML=`<div class="empty-state"><div style="font-size:28px;margin-bottom:8px">◌</div>No articles found.<p>${articles.length===0?'Click "Refresh Feeds" to fetch articles.':'Try a different filter.'}</p></div>`;
+    return;
+  }
   const groups={};
   list.forEach(a=>{const k=groupLabel(new Date(a.pub_date));if(!groups[k])groups[k]=[];groups[k].push(a);});
   el.innerHTML=Object.entries(groups).map(([label,items])=>`<div class="section-divider">${label} · ${items.length} article${items.length>1?'s':''}</div>${items.map(cardHtml).join('')}`).join('');
 }
 
 function cardHtml(a){
-  const idx=sources.findIndex(s=>s.id==a.source_id);const color=COLORS[Math.max(0,idx)%COLORS.length];
-  const sourceName = sources.find(s => s.id === a.source_id)?.title || a.source_title || 'Unknown';
+  const idx=sources.findIndex(s=>String(s.id)===String(a.source_id));
+  const color=COLORS[Math.max(0,idx)%COLORS.length];
+  const sourceName=a.source_title||(sources.find(s=>String(s.id)===String(a.source_id))?.title)||'Unknown';
   const excerpt=(a.excerpt||'').substring(0,140);
-  return`<div class="article-card ${a.read?'read':'unread'}" onclick="openArticle('${a.id}','${esc(a.url||'')}')"><div><div class="card-source" style="color:${color}"><div class="card-source-dot" style="background:${color}"></div>${esc(sourceName)}</div><div class="card-title">${esc(a.title||'')}</div>${excerpt?`<div class="card-excerpt">${esc(excerpt)}…</div>`:''}</div><div class="card-meta"><span class="card-date">${relDate(new Date(a.pub_date))}</span><span class="card-badge ${a.read?'badge-read':'badge-new'}">${a.read?'Read':'New'}</span></div></div>`;
+  return`<div class="article-card ${a.read?'read':'unread'}" onclick="openArticle(${a.id},'${esc(a.url||'')}')"><div><div class="card-source" style="color:${color}"><div class="card-source-dot" style="background:${color}"></div>${esc(sourceName)}</div><div class="card-title">${esc(a.title||'')}</div>${excerpt?`<div class="card-excerpt">${esc(excerpt)}…</div>`:''}</div><div class="card-meta"><span class="card-date">${relDate(new Date(a.pub_date))}</span><span class="card-badge ${a.read?'badge-read':'badge-new'}">${a.read?'Read':'New'}</span></div></div>`;
 }
 
 function renderSidebar(){
@@ -472,7 +452,6 @@ function updateStats(){
   document.getElementById('count-unread').textContent=u;
   document.getElementById('count-today').textContent=t;
   document.getElementById('count-week').textContent=w;
-
   document.getElementById('rp-total').textContent=total;
   document.getElementById('rp-unread').textContent=u;
   document.getElementById('rp-today').textContent=t;
@@ -482,24 +461,17 @@ function updateStats(){
   const circ=213.6,offset=circ-(pct/100)*circ;
   document.getElementById('progressRing').style.strokeDashoffset=offset;
   document.getElementById('progressPct').textContent=pct+'%';
-  document.getElementById('progressLabel').innerHTML=total>0
-    ?`<strong>${read}</strong> of ${total} read`
-    :'No articles yet';
+  document.getElementById('progressLabel').innerHTML=total>0?`<strong>${read}</strong> of ${total} read`:'No articles yet';
 
   const counts={};
   articles.forEach(a=>{
-    const sourceName = sources.find(s => s.id === a.source_id)?.title || a.source_title;
+    const sourceName=a.source_title||(sources.find(s=>String(s.id)===String(a.source_id))?.title);
     if(sourceName)counts[sourceName]=(counts[sourceName]||0)+1;
   });
   const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const max=sorted[0]?sorted[0][1]:1;
   document.getElementById('topSources').innerHTML=sorted.length
-    ?sorted.map(([name,cnt],i)=>`
-      <div class="top-source-item">
-        <div class="top-source-name" title="${esc(name)}" style="color:${COLORS[i%COLORS.length]}">${esc(name)}</div>
-        <div class="top-source-bar-wrap"><div class="top-source-bar" style="width:${Math.round((cnt/max)*100)}%;background:${COLORS[i%COLORS.length]}"></div></div>
-        <div class="top-source-count">${cnt}</div>
-      </div>`).join('')
+    ?sorted.map(([name,cnt],i)=>`<div class="top-source-item"><div class="top-source-name" title="${esc(name)}" style="color:${COLORS[i%COLORS.length]}">${esc(name)}</div><div class="top-source-bar-wrap"><div class="top-source-bar" style="width:${Math.round((cnt/max)*100)}%;background:${COLORS[i%COLORS.length]}"></div></div><div class="top-source-count">${cnt}</div></div>`).join('')
     :'<div style="font-size:12px;color:var(--text-3)">No data yet</div>';
 }
 
@@ -507,20 +479,21 @@ function updateStats(){
 async function openArticle(id,url){
   try{
     await apiCall(`/api/articles/${id}`,{method:'PUT',body:JSON.stringify({read:true})});
-    const a=articles.find(x=>x.id===id);
+    const a=articles.find(x=>x.id===id||String(x.id)===String(id));
     if(a){a.read=true;render();}
   }catch(e){console.error('Mark read failed:', e);}
-  window.open(url,'_blank');
+  if(url)window.open(url,'_blank');
 }
 
 async function refreshFeeds(){
-  const btn=document.getElementById('refreshBtn');btn.disabled=true;btn.innerHTML='<span class="spin">↻</span> &nbsp;Refreshing…';
+  const btn=document.getElementById('refreshBtn');
+  btn.disabled=true;btn.innerHTML='<span class="spin">↻</span> &nbsp;Refreshing…';
   try{
-    const data = await apiCall('/api/refresh',{method:'POST'});
+    const data=await apiCall('/api/refresh',{method:'POST'});
     await loadData();
     const now=new Date();
     document.getElementById('lastRefresh').innerHTML=`<strong>Last refreshed</strong>${now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}`;
-    toast(`✓ ${data.articlesInserted || 0} new articles added`);
+    toast(`✓ ${data.articlesInserted||0} new articles added`);
     btn.innerHTML='✓ &nbsp;Done!';
     setTimeout(()=>{btn.innerHTML='↻ &nbsp;Refresh Feeds';btn.disabled=false;},2500);
   }catch(e){
@@ -537,26 +510,36 @@ function closeModal(){document.getElementById('modalOverlay').classList.remove('
 function closeModalOnBg(e){if(e.target.id==='modalOverlay')closeModal();}
 
 function renderSourceList(){
-  document.getElementById('sourceList').innerHTML=sources.length?sources.map(s=>`<li class="source-list-item"><div><div class="source-list-name">${esc(s.title||s.name)}</div><div class="source-list-url">${esc(s.url||'')}</div></div><button class="delete-btn" onclick="deleteSource('${s.id}')">Delete</button></li>`).join(''):'<li style="color:var(--text-3);font-size:13px;padding:8px 0">No sources yet.</li>';
+  document.getElementById('sourceList').innerHTML=sources.length
+    ?sources.map(s=>`<li class="source-list-item"><div><div class="source-list-name">${esc(s.title||s.name||'')}</div><div class="source-list-url">${esc(s.url||s.website_url||'')}</div></div><button class="delete-btn" onclick="deleteSource('${s.id}')">Delete</button></li>`).join('')
+    :'<li style="color:var(--text-3);font-size:13px;padding:8px 0">No sources yet.</li>';
 }
 
 async function addSource(){
   const name=document.getElementById('sourceName').value.trim();
   const url=document.getElementById('sourceUrl').value.trim();
   const feedUrl=document.getElementById('sourceFeedUrl').value.trim();
-  if(!name||!feedUrl){toast('Name and RSS feed URL are required');return;}
+
+  if(!feedUrl){toast('RSS feed URL is required');return;}
+
   const btn=document.getElementById('addBtn');btn.disabled=true;btn.textContent='Adding…';
   try{
-    // FIX: send feedUrl as a separate field so the API stores it in the feed_url column
-    await apiCall('/api/sources',{method:'POST',body:JSON.stringify({title:name,url:url||feedUrl,feedUrl:feedUrl})});
+    await apiCall('/api/sources',{
+      method:'POST',
+      body:JSON.stringify({
+        title: name||feedUrl,
+        url: url||feedUrl,
+        feedUrl: feedUrl
+      })
+    });
     await loadSources();
     document.getElementById('sourceName').value='';
     document.getElementById('sourceUrl').value='';
     document.getElementById('sourceFeedUrl').value='';
     renderSourceList();
-    toast(`✓ Added ${name}`);
+    toast(`✓ Added ${name||feedUrl}`);
   }catch(e){
-    toast('Error: '+e.message);
+    toast('Error: '+(e.message||'Could not add source'));
     console.error('Add source failed:', e);
   }
   btn.disabled=false;btn.textContent='+ Add Source';
@@ -570,7 +553,7 @@ async function deleteSource(id){
     renderSourceList();
     toast('Source deleted');
   }catch(e){
-    toast('Error deleting source');
+    toast('Error deleting source: '+(e.message||''));
     console.error('Delete failed:', e);
   }
 }
@@ -603,32 +586,33 @@ function relDate(d){
   return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
 }
 
-function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');}
 function showEmpty(msg){document.getElementById('articlesList').innerHTML=`<div class="empty-state">${msg}</div>`;}
 
-let _tt;function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),3000);}
+let _tt;function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),3500);}
 
 // ========== PANEL TOGGLE ==========
-function togglePanel() {
-  if (window.innerWidth <= 768) return;
-  const hidden = document.querySelector('.layout').classList.toggle('panel-hidden');
-  document.getElementById('panelArrow').textContent = hidden ? '‹' : '›';
-  localStorage.setItem('panelHidden', hidden ? '1' : '0');
+function togglePanel(){
+  if(window.innerWidth<=768)return;
+  const hidden=document.querySelector('.layout').classList.toggle('panel-hidden');
+  document.getElementById('panelArrow').textContent=hidden?'‹':'›';
+  localStorage.setItem('panelHidden',hidden?'1':'0');
 }
 
-function restorePanel() {
-  if (window.innerWidth <= 768) return;
-  if (localStorage.getItem('panelHidden') === '1') {
+function restorePanel(){
+  if(window.innerWidth<=768)return;
+  if(localStorage.getItem('panelHidden')==='1'){
     document.querySelector('.layout').classList.add('panel-hidden');
-    document.getElementById('panelArrow').textContent = '‹';
+    document.getElementById('panelArrow').textContent='‹';
   }
 }
 
 // ========== MOBILE NAV ==========
-function mobFilter(f) {
-  document.querySelectorAll('.mob-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('mob-' + f).classList.add('active');
-  setFilter(f, document.querySelector(`[data-filter="${f}"]`) || document.createElement('div'));
+function mobFilter(f){
+  document.querySelectorAll('.mob-btn').forEach(b=>b.classList.remove('active'));
+  const btn=document.getElementById('mob-'+f);
+  if(btn)btn.classList.add('active');
+  setFilter(f,document.querySelector(`[data-filter="${f}"]`)||document.createElement('div'));
 }
 
 // ========== STARTUP ==========
@@ -637,29 +621,29 @@ restoreTheme();
 init();
 
 // ========== PWA SERVICE WORKER ==========
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/sw.js').catch(()=>{});
   });
 }
 </script>
 
-  <nav class="mobile-nav" id="mobileNav">
-    <button class="mob-btn active" id="mob-all" onclick="mobFilter('all')">
-      <span class="mob-icon">◈</span>All
-    </button>
-    <button class="mob-btn" id="mob-unread" onclick="mobFilter('unread')">
-      <span class="mob-icon">○</span>Unread
-    </button>
-    <button class="mob-btn" id="mob-today" onclick="mobFilter('today')">
-      <span class="mob-icon">◷</span>Today
-    </button>
-    <button class="mob-btn" id="mob-refresh" onclick="refreshFeeds()">
-      <span class="mob-icon" id="mobRefreshIcon">↻</span>Refresh
-    </button>
-    <button class="mob-btn" id="mob-sources" onclick="openModal()">
-      <span class="mob-icon">⚙</span>Sources
-    </button>
-  </nav>
+<nav class="mobile-nav" id="mobileNav">
+  <button class="mob-btn active" id="mob-all" onclick="mobFilter('all')">
+    <span class="mob-icon">◈</span>All
+  </button>
+  <button class="mob-btn" id="mob-unread" onclick="mobFilter('unread')">
+    <span class="mob-icon">○</span>Unread
+  </button>
+  <button class="mob-btn" id="mob-today" onclick="mobFilter('today')">
+    <span class="mob-icon">◷</span>Today
+  </button>
+  <button class="mob-btn" id="mob-refresh" onclick="refreshFeeds()">
+    <span class="mob-icon" id="mobRefreshIcon">↻</span>Refresh
+  </button>
+  <button class="mob-btn" id="mob-sources" onclick="openModal()">
+    <span class="mob-icon">⚙</span>Sources
+  </button>
+</nav>
 </body>
 </html>

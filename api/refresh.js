@@ -12,11 +12,9 @@ async function handler(request) {
   const startTime = Date.now();
 
   try {
-    // FIX: select feed_url (the RSS endpoint), not url (the website homepage)
     const sourcesResult = await query(
       'SELECT id, feed_url, name FROM sources WHERE active = true ORDER BY name'
     );
-
     const sources = sourcesResult.rows;
 
     if (!sources.length) {
@@ -30,23 +28,19 @@ async function handler(request) {
 
     await Promise.allSettled(sources.map(async (source) => {
       try {
-        // FIX: pass feed_url to the RSS parser, not url
         const parsed = await parseFeed(source.feed_url);
-
         if (!parsed.success) {
           await logError('/api/refresh', new Error(`Feed parse failed: ${source.name}`), parsed.error);
           results.failed++;
           results.feeds.push({ source: source.name, success: false, error: parsed.error });
           return;
         }
-
         const insertResult = await bulkInsertArticles(source.id, parsed.articles);
         results.success++;
         results.articlesInserted += insertResult.inserted;
         results.articlesSkipped += insertResult.skipped;
         results.feeds.push({
-          source: source.name,
-          success: true,
+          source: source.name, success: true,
           articlesFound: parsed.articles.length,
           articlesInserted: insertResult.inserted,
           articlesSkipped: insertResult.skipped
@@ -74,16 +68,13 @@ async function handler(request) {
 
 async function bulkInsertArticles(sourceId, articles) {
   if (!articles.length) return { inserted: 0, skipped: 0 };
-
   try {
     const values = articles.map((_, i) => {
       const b = i * 8;
       return `($${b+1},$${b+2},$${b+3},$${b+4},$${b+5},$${b+6},$${b+7},$${b+8})`;
     }).join(', ');
-
     const params = [];
     articles.forEach(a => params.push(sourceId, a.title, a.url, a.content, a.excerpt, a.pub_date, a.content_hash, a.read_time_minutes));
-
     const result = await query(
       `INSERT INTO articles (source_id, title, url, content, excerpt, pub_date, content_hash, read_time_minutes)
        VALUES ${values}
@@ -91,7 +82,6 @@ async function bulkInsertArticles(sourceId, articles) {
        RETURNING id`,
       params
     );
-
     return { inserted: result.rows.length, skipped: articles.length - result.rows.length };
   } catch (error) {
     console.error('Bulk insert failed, falling back to individual inserts:', error);
