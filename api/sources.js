@@ -1,7 +1,7 @@
-import { query } from '../_db.js';
-import { withCors } from '../_cors.js';
-import { withAuth } from '../_auth.js';
-import { logError } from '../_logger.js';
+import { query } from './_db.js';
+import { withCors } from './_cors.js';
+import { withAuth } from './_auth.js';
+import { logError } from './_logger.js';
 
 async function handler(request, context) {
   try {
@@ -9,12 +9,12 @@ async function handler(request, context) {
 
     if (request.method === 'GET') {
       if (id) {
-        // Get single source
         const result = await query(
           `SELECT 
             s.id,
-            s.url,
-            COALESCE(s.title, s.url) as title,
+            s.feed_url as url,
+            s.url as website_url,
+            COALESCE(s.name, s.feed_url) as title,
             COALESCE(s.category, 'Uncategorized') as category,
             COALESCE(s.active, true) as active,
             COUNT(a.id) as total_articles,
@@ -22,7 +22,7 @@ async function handler(request, context) {
           FROM sources s
           LEFT JOIN articles a ON s.id = a.source_id
           WHERE s.id = $1
-          GROUP BY s.id, s.url, s.title, s.category, s.active`,
+          GROUP BY s.id, s.feed_url, s.url, s.name, s.category, s.active`,
           [id]
         );
 
@@ -40,19 +40,21 @@ async function handler(request, context) {
       }
 
       // Get all sources with unread counts
+      // FIX: use 'name' column (not 'title'), expose feed_url as url for frontend compatibility
       const result = await query(
         `SELECT 
           s.id,
-          s.url,
-          COALESCE(s.title, s.url) as title,
+          s.feed_url as url,
+          s.url as website_url,
+          COALESCE(s.name, s.feed_url) as title,
           COALESCE(s.category, 'Uncategorized') as category,
           COALESCE(s.active, true) as active,
           COUNT(a.id) as total_articles,
           COUNT(CASE WHEN a.read = false THEN 1 END) as unread_count
         FROM sources s
         LEFT JOIN articles a ON s.id = a.source_id
-        GROUP BY s.id, s.url, s.title, s.category, s.active
-        ORDER BY COALESCE(s.title, s.url)`
+        GROUP BY s.id, s.feed_url, s.url, s.name, s.category, s.active
+        ORDER BY COALESCE(s.name, s.feed_url)`
       );
 
       return new Response(JSON.stringify(result.rows), {
@@ -62,23 +64,27 @@ async function handler(request, context) {
     }
 
     if (request.method === 'POST') {
-      // Add new source
       const body = await request.json();
-      const { url, title, category = null } = body;
+      // Frontend sends: { title (name), url (website), feedUrl (RSS feed) }
+      // OR old format: { title, url } where url might be the feed
+      const { title, url, feedUrl, feed_url } = body;
+      const rssFeedUrl = feedUrl || feed_url || url;
+      const websiteUrl = url || rssFeedUrl;
 
-      if (!url) {
+      if (!rssFeedUrl) {
         return new Response(
-          JSON.stringify({ error: 'URL is required' }),
+          JSON.stringify({ error: 'Feed URL is required' }),
           { status: 400, headers: { 'Content-Type': 'application/json' } }
         );
       }
 
       try {
+        // FIX: Insert into correct columns: name, url (website), feed_url (RSS)
         const result = await query(
-          `INSERT INTO sources (url, title, category, active)
+          `INSERT INTO sources (name, url, feed_url, active)
            VALUES ($1, $2, $3, true)
-           RETURNING *`,
-          [url, title || url, category]
+           RETURNING id, name as title, feed_url as url, url as website_url, category, active`,
+          [title || rssFeedUrl, websiteUrl, rssFeedUrl]
         );
 
         return new Response(JSON.stringify(result.rows[0]), {
@@ -87,9 +93,8 @@ async function handler(request, context) {
         });
       } catch (error) {
         if (error.code === '23505') {
-          // Unique constraint violation
           return new Response(
-            JSON.stringify({ error: 'Source URL already exists' }),
+            JSON.stringify({ error: 'Source feed URL already exists' }),
             { status: 409, headers: { 'Content-Type': 'application/json' } }
           );
         }
@@ -98,7 +103,6 @@ async function handler(request, context) {
     }
 
     if (request.method === 'PUT') {
-      // Update source (pause/unpause, rename, etc.)
       if (!id) {
         return new Response(
           JSON.stringify({ error: 'ID required' }),
@@ -120,7 +124,8 @@ async function handler(request, context) {
       }
 
       if (title !== undefined) {
-        updates.push(`title = $${paramCount}`);
+        // FIX: update 'name' not 'title'
+        updates.push(`name = $${paramCount}`);
         params.push(title);
         paramCount++;
       }
@@ -142,7 +147,7 @@ async function handler(request, context) {
         `UPDATE sources 
          SET ${updates.join(', ')}
          WHERE id = $1
-         RETURNING *`,
+         RETURNING id, name as title, feed_url as url, url as website_url, category, active`,
         params
       );
 
@@ -160,7 +165,6 @@ async function handler(request, context) {
     }
 
     if (request.method === 'DELETE') {
-      // Delete source and all its articles
       if (!id) {
         return new Response(
           JSON.stringify({ error: 'ID required' }),
@@ -168,19 +172,13 @@ async function handler(request, context) {
         );
       }
 
-      // Use transaction to ensure consistency
       try {
         await query('BEGIN');
-        
-        // Delete articles first
         await query('DELETE FROM articles WHERE source_id = $1', [id]);
-        
-        // Then delete source
         const result = await query(
           'DELETE FROM sources WHERE id = $1 RETURNING id',
           [id]
         );
-        
         await query('COMMIT');
 
         if (result.rows.length === 0) {

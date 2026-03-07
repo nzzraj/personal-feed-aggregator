@@ -8,21 +8,12 @@ async function handler(request, context) {
     const id = context.params.id;
 
     if (request.method === 'GET') {
-      // Get single article with full content
       const result = await query(
         `SELECT 
-          a.id,
-          a.title,
-          a.url,
-          a.content,
-          a.excerpt,
-          a.pub_date,
-          a.read,
-          a.saved,
-          a.read_time_minutes,
-          a.word_count,
+          a.id, a.title, a.url, a.content, a.excerpt, a.pub_date,
+          a.read, a.saved, a.read_time_minutes, a.word_count,
           s.id as source_id,
-          s.title as source_title,
+          s.name as source_title,
           s.category as source_category
         FROM articles a
         JOIN sources s ON a.source_id = s.id
@@ -44,7 +35,6 @@ async function handler(request, context) {
     }
 
     if (request.method === 'PUT') {
-      // Update article read/saved state
       const body = await request.json();
       const { read, saved } = body;
 
@@ -93,7 +83,6 @@ async function handler(request, context) {
     }
 
     if (request.method === 'DELETE') {
-      // Delete article (requires API key)
       const result = await query(
         'DELETE FROM articles WHERE id = $1 RETURNING id',
         [id]

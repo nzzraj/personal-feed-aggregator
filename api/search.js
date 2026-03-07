@@ -1,6 +1,6 @@
-import { query } from '../_db.js';
-import { withCors } from '../_cors.js';
-import { logError } from '../_logger.js';
+import { query } from './_db.js';
+import { withCors } from './_cors.js';
+import { logError } from './_logger.js';
 
 async function handler(request) {
   if (request.method !== 'GET') {
@@ -11,7 +11,8 @@ async function handler(request) {
   }
 
   try {
-    const url = new URL(request.url);
+    // FIX: Use dummy base to handle Vercel's relative request.url
+    const url = new URL(request.url, 'http://localhost');
     const searchQuery = url.searchParams.get('q') || '';
     const limit = Math.min(parseInt(url.searchParams.get('limit')) || 50, 200);
     const offset = parseInt(url.searchParams.get('offset')) || 0;
@@ -23,8 +24,6 @@ async function handler(request) {
       );
     }
 
-    // Use Postgres full-text search if available, fallback to ILIKE
-    // ILIKE is case-insensitive and works on partial matches
     const searchPattern = `%${searchQuery}%`;
 
     const result = await query(
@@ -38,8 +37,7 @@ async function handler(request) {
         a.saved,
         a.read_time_minutes,
         s.id as source_id,
-        s.title as source_title,
-        -- Calculate relevance (title matches are scored higher)
+        s.name as source_title,
         CASE 
           WHEN a.title ILIKE $1 THEN 2
           ELSE 1

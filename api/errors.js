@@ -1,6 +1,6 @@
-import { query } from '../_db.js';
-import { withCors } from '../_cors.js';
-import { withAuth } from '../_auth.js';
+import { query } from './_db.js';
+import { withCors } from './_cors.js';
+import { withAuth } from './_auth.js';
 
 async function handler(request) {
   if (request.method !== 'GET') {
@@ -11,9 +11,10 @@ async function handler(request) {
   }
 
   try {
-    const url = new URL(request.url);
+    // FIX: Use dummy base to handle Vercel's relative request.url
+    const url = new URL(request.url, 'http://localhost');
     const limit = Math.min(parseInt(url.searchParams.get('limit')) || 50, 500);
-    const endpoint = url.searchParams.get('endpoint'); // Optional filter by endpoint
+    const endpoint = url.searchParams.get('endpoint');
 
     let sqlQuery = `
       SELECT 
@@ -38,8 +39,7 @@ async function handler(request) {
 
     const result = await query(sqlQuery, params);
 
-    // Also get error summary
-    const summaryQuery = `
+    const summaryResult = await query(`
       SELECT 
         api_endpoint,
         COUNT(*) as count,
@@ -48,9 +48,7 @@ async function handler(request) {
       WHERE created_at > NOW() - INTERVAL '24 hours'
       GROUP BY api_endpoint
       ORDER BY count DESC
-    `;
-
-    const summaryResult = await query(summaryQuery);
+    `);
 
     return new Response(
       JSON.stringify({

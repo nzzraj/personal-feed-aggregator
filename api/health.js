@@ -1,5 +1,5 @@
-import { healthCheck } from '../_db.js';
-import { withCors } from '../_cors.js';
+import { healthCheck } from './_db.js';
+import { withCors } from './_cors.js';
 
 async function handler(request) {
   if (request.method !== 'GET') {

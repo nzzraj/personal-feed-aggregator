@@ -8,12 +8,14 @@ async function handler(request) {
   }
 
   try {
-    const url = new URL(request.url);
-    
+    // FIX: Vercel passes relative URLs to serverless functions.
+    // Construct an absolute URL using a dummy base so URL() doesn't throw.
+    const url = new URL(request.url, 'http://localhost');
+
     // Query parameters
     const sourceId = url.searchParams.get('source_id');
-    const filter = url.searchParams.get('filter') || 'all'; // all, unread, read, saved, today
-    const limit = Math.min(parseInt(url.searchParams.get('limit')) || 50, 200); // Cap at 200
+    const filter = url.searchParams.get('filter') || 'all';
+    const limit = Math.min(parseInt(url.searchParams.get('limit')) || 50, 200);
     const offset = parseInt(url.searchParams.get('offset')) || 0;
     const search = url.searchParams.get('search') || '';
 
@@ -30,7 +32,7 @@ async function handler(request) {
         a.read_time_minutes,
         a.word_count,
         s.id as source_id,
-        s.title as source_title,
+        s.name as source_title,
         s.category as source_category
       FROM articles a
       JOIN sources s ON a.source_id = s.id
@@ -39,13 +41,11 @@ async function handler(request) {
 
     const params = [];
 
-    // Filter by source
     if (sourceId) {
       sqlQuery += ` AND a.source_id = $${params.length + 1}`;
       params.push(sourceId);
     }
 
-    // Filter by read status
     if (filter === 'unread') {
       sqlQuery += ` AND a.read = false`;
     } else if (filter === 'read') {
@@ -56,27 +56,26 @@ async function handler(request) {
       sqlQuery += ` AND a.pub_date > NOW() - INTERVAL '24 hours'`;
     }
 
-    // Full-text search
     if (search) {
-      // Use Postgres full-text search if available, fallback to ILIKE
       sqlQuery += ` AND (
         a.title ILIKE $${params.length + 1}
         OR a.excerpt ILIKE $${params.length + 1}
       )`;
       const searchPattern = `%${search}%`;
       params.push(searchPattern);
-      params.push(searchPattern);
     }
 
-    // Count total before pagination
-    const countQuery = sqlQuery.replace(
-      /SELECT.*FROM/,
-      'SELECT COUNT(*) as count FROM'
-    );
-    const countResult = await query(countQuery, params);
+    const countQuery = `SELECT COUNT(*) as count FROM articles a JOIN sources s ON a.source_id = s.id WHERE 1=1`
+      + (sourceId ? ` AND a.source_id = $1` : '')
+      + (filter === 'unread' ? ` AND a.read = false` : '')
+      + (filter === 'read' ? ` AND a.read = true` : '')
+      + (filter === 'saved' ? ` AND a.saved = true` : '')
+      + (filter === 'today' ? ` AND a.pub_date > NOW() - INTERVAL '24 hours'` : '');
+
+    const countParams = sourceId ? [sourceId] : [];
+    const countResult = await query(countQuery, countParams);
     const total = parseInt(countResult.rows[0].count);
 
-    // Apply sorting and pagination
     sqlQuery += ` ORDER BY a.pub_date DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
     params.push(limit);
     params.push(offset);
