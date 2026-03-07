@@ -1,0 +1,50 @@
+name: Daily Feed Refresh
+
+on:
+  schedule:
+    # Run every day at 8 AM UTC
+    - cron: '0 8 * * *'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Refresh feeds via API
+        run: |
+          # Call the refresh endpoint with API key
+          RESPONSE=$(curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.API_KEY }}" \
+            -H "Content-Type: application/json" \
+            https://neerajfeed.vercel.app/api/refresh)
+          
+          echo "Refresh response:"
+          echo "$RESPONSE" | jq .
+          
+          # Check if response indicates success
+          SUCCESS_COUNT=$(echo "$RESPONSE" | jq '.success // 0')
+          TOTAL_SOURCES=$(($SUCCESS_COUNT + $(echo "$RESPONSE" | jq '.failed // 0')))
+          ARTICLES_INSERTED=$(echo "$RESPONSE" | jq '.articlesInserted // 0')
+          
+          echo ""
+          echo "📊 Refresh Summary:"
+          echo "   ✅ Successful: $SUCCESS_COUNT"
+          echo "   ❌ Failed: $(echo "$RESPONSE" | jq '.failed // 0')"
+          echo "   📄 Articles: $ARTICLES_INSERTED inserted"
+          echo "   ⏱️  Duration: $(echo "$RESPONSE" | jq -r '.duration // "unknown"')"
+          
+          # Exit with error if feeds failed
+          if [ "$SUCCESS_COUNT" -lt 5 ]; then
+            echo "⚠️  Warning: Less than 5 feeds refreshed successfully"
+            exit 1
+          fi
+
+      - name: Send notification on failure
+        if: failure()
+        run: |
+          # Optional: Send Slack/Discord notification
+          # Example for Slack:
+          # curl -X POST ${{ secrets.SLACK_WEBHOOK }} \
+          #   -d '{"text":"🔴 Feed refresh failed"}'
+          echo "Feed refresh failed"

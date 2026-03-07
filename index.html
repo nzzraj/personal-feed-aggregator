@@ -108,6 +108,7 @@
     .card-badge{font-size:10px;padding:3px 8px;border-radius:10px;font-weight:500;}
     .badge-new{background:var(--accent-bg);color:var(--accent);}
     .badge-read{background:var(--tag-bg);color:var(--tag-text);}
+    .card-read-time{font-size:11px;color:var(--text-3);white-space:nowrap;}
     .empty-state{padding:60px 24px;text-align:center;color:var(--text-3);font-size:14px;background:var(--bg-card);}
     .empty-state p{margin-top:8px;font-size:13px;color:var(--text-3);}
 
@@ -171,12 +172,12 @@
     .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
     @media(max-width:900px){.layout{grid-template-columns:1fr;}.right-panel{display:none;}aside{position:relative;height:auto;}main{padding:24px 20px;}}
 
-
     /* ── PANEL TOGGLE ── */
     .panel-toggle{background:none;border:none;cursor:pointer;color:var(--text-3);padding:4px 6px;border-radius:5px;font-size:16px;line-height:1;transition:all 0.15s ease;margin-left:8px;flex-shrink:0;}
     .panel-toggle:hover{background:var(--bg-hover);color:var(--text);}
+    
     /* ── MOBILE BOTTOM NAV ── */
-    .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:60;background:var(--bg-card);border-top:1px solid var(--border);padding:8px 0 max(8px, env(safe-area-inset-bottom));display:none;grid-template-columns:repeat(5,1fr);transition:background 0.3s,border-color 0.3s;}
+    .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:60;background:var(--bg-card);border-top:1px solid var(--border);padding:8px 0 max(8px, env(safe-area-inset-bottom));grid-template-columns:repeat(5,1fr);transition:background 0.3s,border-color 0.3s;}
     .mob-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;border:none;background:none;color:var(--text-3);font-family:'Figtree',sans-serif;font-size:10px;font-weight:500;transition:color 0.15s;-webkit-tap-highlight-color:transparent;}
     .mob-btn.active{color:var(--accent);}
     .mob-btn:active{opacity:0.7;}
@@ -337,27 +338,86 @@
 </div>
 <div class="toast" id="toast"></div>
 
+
 <script>
-const API_URL='https://personal-feed-aggregator-neerajs-projects-137c26b8.vercel.app';
+// ========== API CONFIGURATION ==========
+const API_BASE = 'https://neerajfeed.vercel.app'; // Your Vercel domain
+const API_KEY = localStorage.getItem('api_key') || '5cbbe097edc4435bba90114ab1c05799'; // Replace with actual key
+
+// Helper function to make authenticated API calls
+async function apiCall(endpoint, options = {}) {
+  const url = `${API_BASE}${endpoint}`;
+  const isGet = (options.method || 'GET') === 'GET';
+  
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers
+  };
+
+  // Add API key for POST/PUT/DELETE requests
+  if (!isGet) {
+    headers['Authorization'] = `Bearer ${API_KEY}`;
+  }
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || `HTTP ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error(`API call failed: ${endpoint}`, error);
+    throw error;
+  }
+}
+
+// ========== APP STATE ==========
 const COLORS=['#C96442','#6B8F71','#5B7FA6','#9B7AB0','#C4963A','#7A8F6B','#A06B5B','#5B7A8F','#8F6B9B','#6B8A7A'];
 let articles=[],sources=[],currentFilter='all',searchTerm='',activeSource=null;
 
+// ========== INITIALIZATION ==========
 function init(){
   setDate();restoreTheme();loadData();
   document.getElementById('searchInput').addEventListener('input',e=>{searchTerm=e.target.value.toLowerCase();render();});
 }
+
 function setDate(){
   document.getElementById('dateBadge').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
 }
-async function loadData(){await Promise.all([loadArticles(),loadSources()]);}
+
+async function loadData(){
+  await Promise.all([loadArticles(),loadSources()]);
+}
+
 async function loadArticles(){
-  try{const r=await fetch(`${API_URL}/api/articles`);if(!r.ok)throw 0;articles=await r.json();render();}
-  catch{showEmpty('Could not load articles. Try refreshing.');}
+  try{
+    const data = await apiCall('/api/articles');
+    articles = Array.isArray(data.articles) ? data.articles : data;
+    render();
+  }catch(e){
+    showEmpty('Could not load articles. Try refreshing.');
+    console.error('Load articles failed:', e);
+  }
 }
+
 async function loadSources(){
-  try{const r=await fetch(`${API_URL}/api/sources`);if(!r.ok)throw 0;sources=await r.json();renderSidebar();updateStats();}
-  catch{console.error('Sources load failed');}
+  try{
+    const data = await apiCall('/api/sources');
+    sources = Array.isArray(data) ? data : [];
+    renderSidebar();
+    updateStats();
+  }catch(e){
+    console.error('Load sources failed:', e);
+  }
 }
+
+// ========== FILTERING & RENDERING ==========
 function setFilter(f,el){
   currentFilter=f;activeSource=null;
   document.querySelectorAll('.nav-item,.tab').forEach(e=>e.classList.remove('active'));
@@ -366,58 +426,62 @@ function setFilter(f,el){
   document.getElementById('sectionTitle').innerHTML=`${t[f]} <span>Articles</span>`;
   render();
 }
+
 function filterBySource(id,name){
   activeSource=id;currentFilter='all';
   document.querySelectorAll('.nav-item,.tab').forEach(e=>e.classList.remove('active'));
   document.getElementById('sectionTitle').innerHTML=`<span style="font-style:italic">${esc(name)}</span>`;
   render();
 }
+
 function getFiltered(){
   let list=[...articles];
   if(activeSource!==null)list=list.filter(a=>a.source_id==activeSource);
-  if(searchTerm)list=list.filter(a=>(a.title||'').toLowerCase().includes(searchTerm)||(a.excerpt||'').toLowerCase().includes(searchTerm)||(a.source_name||'').toLowerCase().includes(searchTerm));
+  if(searchTerm)list=list.filter(a=>(a.title||'').toLowerCase().includes(searchTerm)||(a.excerpt||'').toLowerCase().includes(searchTerm));
   const now=new Date(),today=new Date(now.getFullYear(),now.getMonth(),now.getDate()),week=new Date(today);
   week.setDate(week.getDate()-7);
   if(currentFilter==='unread')list=list.filter(a=>!a.read);
-  if(currentFilter==='today')list=list.filter(a=>new Date(a.pub_date||a.created_at)>=today);
-  if(currentFilter==='week')list=list.filter(a=>new Date(a.pub_date||a.created_at)>=week);
-  return list.sort((a,b)=>new Date(b.pub_date||b.created_at)-new Date(a.pub_date||a.created_at));
+  if(currentFilter==='today')list=list.filter(a=>new Date(a.pub_date)>=today);
+  if(currentFilter==='week')list=list.filter(a=>new Date(a.pub_date)>=week);
+  return list.sort((a,b)=>new Date(b.pub_date)-new Date(a.pub_date));
 }
+
 function render(){
   updateStats();const list=getFiltered();const el=document.getElementById('articlesList');
   if(!list.length){el.innerHTML=`<div class="empty-state"><div style="font-size:28px;margin-bottom:8px">◌</div>No articles found.<p>${articles.length===0?'Click "Refresh Feeds" to fetch articles.':'Try a different filter.'}</p></div>`;return;}
   const groups={};
-  list.forEach(a=>{const k=groupLabel(new Date(a.pub_date||a.created_at));if(!groups[k])groups[k]=[];groups[k].push(a);});
+  list.forEach(a=>{const k=groupLabel(new Date(a.pub_date));if(!groups[k])groups[k]=[];groups[k].push(a);});
   el.innerHTML=Object.entries(groups).map(([label,items])=>`<div class="section-divider">${label} · ${items.length} article${items.length>1?'s':''}</div>${items.map(cardHtml).join('')}`).join('');
 }
+
 function cardHtml(a){
   const idx=sources.findIndex(s=>s.id==a.source_id);const color=COLORS[Math.max(0,idx)%COLORS.length];
-  const excerpt=(a.excerpt||a.content||'').replace(/<[^>]*>/g,'').substring(0,140);
-  return`<div class="article-card ${a.read?'read':'unread'}" onclick="openArticle(${a.id},'${esc(a.url||'')}')"><div><div class="card-source" style="color:${color}"><div class="card-source-dot" style="background:${color}"></div>${esc(a.source_name||'Unknown')}</div><div class="card-title">${esc(a.title||'')}</div>${excerpt?`<div class="card-excerpt">${esc(excerpt)}…</div>`:''}</div><div class="card-meta"><span class="card-date">${relDate(new Date(a.pub_date||a.created_at))}</span><span class="card-badge ${a.read?'badge-read':'badge-new'}">${a.read?'Read':'New'}</span></div></div>`;
+  const sourceName = sources.find(s => s.id === a.source_id)?.title || a.source_title || 'Unknown';
+  const excerpt=(a.excerpt||'').substring(0,140);
+  return`<div class="article-card ${a.read?'read':'unread'}" onclick="openArticle('${a.id}','${esc(a.url||'')}')"><div><div class="card-source" style="color:${color}"><div class="card-source-dot" style="background:${color}"></div>${esc(sourceName)}</div><div class="card-title">${esc(a.title||'')}</div>${excerpt?`<div class="card-excerpt">${esc(excerpt)}…</div>`:''}</div><div class="card-meta"><span class="card-date">${relDate(new Date(a.pub_date))}</span><span class="card-badge ${a.read?'badge-read':'badge-new'}">${a.read?'Read':'New'}</span></div></div>`;
 }
+
 function renderSidebar(){
-  document.getElementById('sidebarSources').innerHTML=sources.map((s,i)=>`<div class="source-nav-item" onclick="filterBySource(${s.id},'${esc(s.name)}')"><div class="source-dot" style="background:${COLORS[i%COLORS.length]}"></div>${esc(s.name)}</div>`).join('');
+  document.getElementById('sidebarSources').innerHTML=sources.map((s,i)=>`<div class="source-nav-item" onclick="filterBySource('${s.id}','${esc(s.title||s.name||'')}')"><div class="source-dot" style="background:${COLORS[i%COLORS.length]}"></div>${esc(s.title||s.name||'')}</div>`).join('');
 }
+
 function updateStats(){
   const now=new Date(),today=new Date(now.getFullYear(),now.getMonth(),now.getDate()),week=new Date(today);
   week.setDate(week.getDate()-7);
   const total=articles.length,u=articles.filter(a=>!a.read).length,read=total-u;
-  const t=articles.filter(a=>new Date(a.pub_date||a.created_at)>=today).length;
-  const w=articles.filter(a=>new Date(a.pub_date||a.created_at)>=week).length;
+  const t=articles.filter(a=>new Date(a.pub_date)>=today).length;
+  const w=articles.filter(a=>new Date(a.pub_date)>=week).length;
 
-  // sidebar counts
   document.getElementById('count-all').textContent=total;
   document.getElementById('count-unread').textContent=u;
   document.getElementById('count-today').textContent=t;
   document.getElementById('count-week').textContent=w;
 
-  // right panel pills
   document.getElementById('rp-total').textContent=total;
   document.getElementById('rp-unread').textContent=u;
   document.getElementById('rp-today').textContent=t;
   document.getElementById('rp-sources').textContent=sources.length;
 
-  // progress ring
   const pct=total>0?Math.round((read/total)*100):0;
   const circ=213.6,offset=circ-(pct/100)*circ;
   document.getElementById('progressRing').style.strokeDashoffset=offset;
@@ -426,9 +490,11 @@ function updateStats(){
     ?`<strong>${read}</strong> of ${total} read`
     :'No articles yet';
 
-  // top sources
   const counts={};
-  articles.forEach(a=>{if(a.source_name)counts[a.source_name]=(counts[a.source_name]||0)+1;});
+  articles.forEach(a=>{
+    const sourceName = sources.find(s => s.id === a.source_id)?.title || a.source_title;
+    if(sourceName)counts[sourceName]=(counts[sourceName]||0)+1;
+  });
   const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const max=sorted[0]?sorted[0][1]:1;
   document.getElementById('topSources').innerHTML=sorted.length
@@ -440,40 +506,77 @@ function updateStats(){
       </div>`).join('')
     :'<div style="font-size:12px;color:var(--text-3)">No data yet</div>';
 }
+
+// ========== ARTICLE ACTIONS ==========
 async function openArticle(id,url){
-  try{await fetch(`${API_URL}/api/articles/${id}/read`,{method:'PUT'});const a=articles.find(x=>x.id===id);if(a){a.read=true;render();}}catch{}
+  try{
+    await apiCall(`/api/articles/${id}`,{method:'PUT',body:JSON.stringify({read:true})});
+    const a=articles.find(x=>x.id===id);
+    if(a){a.read=true;render();}
+  }catch(e){console.error('Mark read failed:', e);}
   window.open(url,'_blank');
 }
+
 async function refreshFeeds(){
   const btn=document.getElementById('refreshBtn');btn.disabled=true;btn.innerHTML='<span class="spin">↻</span> &nbsp;Refreshing…';
   try{
-    const r=await fetch(`${API_URL}/api/refresh`,{method:'POST'});if(!r.ok)throw 0;
-    const d=await r.json();await loadData();
+    const data = await apiCall('/api/refresh',{method:'POST'});
+    await loadData();
     const now=new Date();
     document.getElementById('lastRefresh').innerHTML=`<strong>Last refreshed</strong>${now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}`;
-    toast(`✓ ${d.newArticles} new articles added`);
-    btn.innerHTML='✓ &nbsp;Done!';setTimeout(()=>{btn.innerHTML='↻ &nbsp;Refresh Feeds';btn.disabled=false;},2500);
-  }catch{toast('Error refreshing. Please try again.');btn.innerHTML='↻ &nbsp;Refresh Feeds';btn.disabled=false;}
+    toast(`✓ ${data.articlesInserted || 0} new articles added`);
+    btn.innerHTML='✓ &nbsp;Done!';
+    setTimeout(()=>{btn.innerHTML='↻ &nbsp;Refresh Feeds';btn.disabled=false;},2500);
+  }catch(e){
+    toast('Error refreshing. Please try again.');
+    btn.innerHTML='↻ &nbsp;Refresh Feeds';
+    btn.disabled=false;
+    console.error('Refresh failed:', e);
+  }
 }
+
+// ========== MODAL MANAGEMENT ==========
 function openModal(){renderSourceList();document.getElementById('modalOverlay').classList.add('active');}
 function closeModal(){document.getElementById('modalOverlay').classList.remove('active');}
 function closeModalOnBg(e){if(e.target.id==='modalOverlay')closeModal();}
+
 function renderSourceList(){
-  document.getElementById('sourceList').innerHTML=sources.length?sources.map(s=>`<li class="source-list-item"><div><div class="source-list-name">${esc(s.name)}</div><div class="source-list-url">${esc(s.feed_url)}</div></div><button class="delete-btn" onclick="deleteSource(${s.id})">Delete</button></li>`).join(''):'<li style="color:var(--text-3);font-size:13px;padding:8px 0">No sources yet.</li>';
+  document.getElementById('sourceList').innerHTML=sources.length?sources.map(s=>`<li class="source-list-item"><div><div class="source-list-name">${esc(s.title||s.name)}</div><div class="source-list-url">${esc(s.url||'')}</div></div><button class="delete-btn" onclick="deleteSource('${s.id}')">Delete</button></li>`).join(''):'<li style="color:var(--text-3);font-size:13px;padding:8px 0">No sources yet.</li>';
 }
+
 async function addSource(){
   const name=document.getElementById('sourceName').value.trim(),url=document.getElementById('sourceUrl').value.trim(),feedUrl=document.getElementById('sourceFeedUrl').value.trim();
   if(!name||!feedUrl){toast('Name and RSS feed URL are required');return;}
   const btn=document.getElementById('addBtn');btn.disabled=true;btn.textContent='Adding…';
-  try{const r=await fetch(`${API_URL}/api/sources`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,url,feed_url:feedUrl})});if(!r.ok){const e=await r.json();throw new Error(e.error);}await loadSources();document.getElementById('sourceName').value='';document.getElementById('sourceUrl').value='';document.getElementById('sourceFeedUrl').value='';renderSourceList();toast(`✓ Added ${name}`);}
-  catch(e){toast('Error: '+e.message);}
+  try{
+    const data = await apiCall('/api/sources',{method:'POST',body:JSON.stringify({title:name,url:url||feedUrl})});
+    await loadSources();
+    document.getElementById('sourceName').value='';
+    document.getElementById('sourceUrl').value='';
+    document.getElementById('sourceFeedUrl').value='';
+    renderSourceList();
+    toast(`✓ Added ${name}`);
+  }catch(e){
+    toast('Error: '+e.message);
+    console.error('Add source failed:', e);
+  }
   btn.disabled=false;btn.textContent='+ Add Source';
 }
+
 async function deleteSource(id){
   if(!confirm('Delete this source and all its articles?'))return;
-  try{const r=await fetch(`${API_URL}/api/sources/${id}`,{method:'DELETE'});if(!r.ok)throw 0;await loadData();renderSourceList();toast('Source deleted');}
-  catch{toast('Error deleting source');}
+  try{
+    await apiCall(`/api/sources/${id}`,{method:'DELETE'});
+    await loadData();
+    renderSourceList();
+    toast('Source deleted');
+  }catch(e){
+    toast('Error deleting source');
+    console.error('Delete failed:', e);
+  }
 }
+
+// ========== THEME & UI ==========
 function toggleTheme(){
   const dark=document.documentElement.getAttribute('data-theme')==='dark';
   const next=dark?'light':'dark';
@@ -481,56 +584,67 @@ function toggleTheme(){
   document.getElementById('themeIcon').textContent=next==='dark'?'☀':'☽';
   localStorage.setItem('theme',next);
 }
+
 function restoreTheme(){
   const s=localStorage.getItem('theme')||'light';
   document.documentElement.setAttribute('data-theme',s);
   document.getElementById('themeIcon').textContent=s==='dark'?'☀':'☽';
 }
+
 function groupLabel(d){
   const now=new Date(),today=new Date(now.getFullYear(),now.getMonth(),now.getDate()),yest=new Date(today);
   yest.setDate(yest.getDate()-1);
   if(d>=today)return'Today';if(d>=yest)return'Yesterday';
   return d.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
 }
+
 function relDate(d){
   const diff=Date.now()-d,h=Math.floor(diff/3600000),m=Math.floor(diff/60000);
   if(m<60)return`${m}m ago`;if(h<24)return`${h}h ago`;if(h<48)return'Yesterday';
   return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
 }
+
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function showEmpty(msg){document.getElementById('articlesList').innerHTML=`<div class="empty-state">${msg}</div>`;}
+
 let _tt;function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),3000);}
 
-// ── PANEL TOGGLE ──
+// ========== PANEL TOGGLE ==========
 function togglePanel() {
   if (window.innerWidth <= 768) return;
   const hidden = document.querySelector('.layout').classList.toggle('panel-hidden');
   document.getElementById('panelArrow').textContent = hidden ? '‹' : '›';
   localStorage.setItem('panelHidden', hidden ? '1' : '0');
 }
+
 function restorePanel() {
-  if (window.innerWidth <= 768) return; // never apply panel state on mobile
+  if (window.innerWidth <= 768) return;
   if (localStorage.getItem('panelHidden') === '1') {
     document.querySelector('.layout').classList.add('panel-hidden');
     document.getElementById('panelArrow').textContent = '‹';
   }
 }
-restorePanel();
-init();
 
-// ── PWA SERVICE WORKER ──
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-  });
-}
-
+// ========== MOBILE NAV ==========
 function mobFilter(f) {
   document.querySelectorAll('.mob-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('mob-' + f).classList.add('active');
   setFilter(f, document.querySelector(`[data-filter="${f}"]`) || document.createElement('div'));
 }
+
+// ========== STARTUP ==========
+restorePanel();
+restoreTheme();
+init();
+
+// ========== PWA SERVICE WORKER ==========
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
 </script>
+
   <nav class="mobile-nav" id="mobileNav">
     <button class="mob-btn active" id="mob-all" onclick="mobFilter('all')">
       <span class="mob-icon">◈</span>All

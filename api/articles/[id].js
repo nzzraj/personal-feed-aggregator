@@ -1,27 +1,29 @@
-const { getPool } = require('../_db');
+import { query } from '../_db.js';
+import { withCors } from '../_cors.js';
+import { withAuth } from '../_auth.js';
+import { logError } from '../_logger.js';
 
-module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,PUT,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  const { id } = req.query;
-
+async function handler(request, context) {
   try {
-    const pool = getPool();
+    const id = context.params.id;
 
-    if (req.method === 'GET') {
-      const result = await pool.query(
+    if (request.method === 'GET') {
+      // Get single article with full content
+      const result = await query(
         `SELECT 
-          a.*,
-          s.name as source_name,
-          s.url as source_url,
-          s.favicon as source_favicon
+          a.id,
+          a.title,
+          a.url,
+          a.content,
+          a.excerpt,
+          a.pub_date,
+          a.read,
+          a.saved,
+          a.read_time_minutes,
+          a.word_count,
+          s.id as source_id,
+          s.title as source_title,
+          s.category as source_category
         FROM articles a
         JOIN sources s ON a.source_id = s.id
         WHERE a.id = $1`,
@@ -29,28 +31,100 @@ module.exports = async (req, res) => {
       );
 
       if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Article not found' });
+        return new Response(
+          JSON.stringify({ error: 'Article not found' }),
+          { status: 404, headers: { 'Content-Type': 'application/json' } }
+        );
       }
 
-      return res.status(200).json(result.rows[0]);
+      return new Response(JSON.stringify(result.rows[0]), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
-    if (req.method === 'PUT') {
-      const result = await pool.query(
-        'UPDATE articles SET read = true WHERE id = $1 RETURNING *',
+    if (request.method === 'PUT') {
+      // Update article read/saved state
+      const body = await request.json();
+      const { read, saved } = body;
+
+      const updates = [];
+      const params = [id];
+      let paramCount = 2;
+
+      if (read !== undefined) {
+        updates.push(`read = $${paramCount}`);
+        params.push(read);
+        paramCount++;
+      }
+
+      if (saved !== undefined) {
+        updates.push(`saved = $${paramCount}`);
+        params.push(saved);
+        paramCount++;
+      }
+
+      if (updates.length === 0) {
+        return new Response(
+          JSON.stringify({ error: 'No fields to update' }),
+          { status: 400, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const result = await query(
+        `UPDATE articles 
+         SET ${updates.join(', ')}, updated_at = NOW()
+         WHERE id = $1
+         RETURNING *`,
+        params
+      );
+
+      if (result.rows.length === 0) {
+        return new Response(
+          JSON.stringify({ error: 'Article not found' }),
+          { status: 404, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
+      return new Response(JSON.stringify(result.rows[0]), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    if (request.method === 'DELETE') {
+      // Delete article (requires API key)
+      const result = await query(
+        'DELETE FROM articles WHERE id = $1 RETURNING id',
         [id]
       );
 
       if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Article not found' });
+        return new Response(
+          JSON.stringify({ error: 'Article not found' }),
+          { status: 404, headers: { 'Content-Type': 'application/json' } }
+        );
       }
 
-      return res.status(200).json(result.rows[0]);
+      return new Response(JSON.stringify({ deleted: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
-    return res.status(405).json({ error: 'Method not allowed' });
-  } catch (err) {
-    console.error('Error processing article:', err);
-    res.status(500).json({ error: 'Database error', message: err.message });
+    return new Response(
+      JSON.stringify({ error: 'Method not allowed' }),
+      { status: 405, headers: { 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    await logError(`/api/articles/[id]`, error, error.stack);
+    console.error('Error processing article:', error);
+
+    return new Response(
+      JSON.stringify({ error: 'Internal server error' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
-};
+}
+
+export default withCors(withAuth(handler));
