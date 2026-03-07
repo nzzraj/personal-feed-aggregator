@@ -2,6 +2,7 @@
   "name": "personal-feed-aggregator",
   "version": "2.0.0",
   "description": "Personal RSS Feed Aggregator with Vercel Serverless",
+  "type": "module",
   "scripts": {
     "dev": "vercel dev",
     "deploy": "vercel --prod"
