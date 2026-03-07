@@ -8,11 +8,9 @@ async function handler(request) {
   }
 
   try {
-    // FIX: Vercel passes relative URLs to serverless functions.
-    // Construct an absolute URL using a dummy base so URL() doesn't throw.
+    // FIX: Vercel passes relative URLs — use dummy base so new URL() doesn't throw
     const url = new URL(request.url, 'http://localhost');
 
-    // Query parameters
     const sourceId = url.searchParams.get('source_id');
     const filter = url.searchParams.get('filter') || 'all';
     const limit = Math.min(parseInt(url.searchParams.get('limit')) || 50, 200);
@@ -46,61 +44,43 @@ async function handler(request) {
       params.push(sourceId);
     }
 
-    if (filter === 'unread') {
-      sqlQuery += ` AND a.read = false`;
-    } else if (filter === 'read') {
-      sqlQuery += ` AND a.read = true`;
-    } else if (filter === 'saved') {
-      sqlQuery += ` AND a.saved = true`;
-    } else if (filter === 'today') {
-      sqlQuery += ` AND a.pub_date > NOW() - INTERVAL '24 hours'`;
-    }
+    if (filter === 'unread') sqlQuery += ` AND a.read = false`;
+    else if (filter === 'read') sqlQuery += ` AND a.read = true`;
+    else if (filter === 'saved') sqlQuery += ` AND a.saved = true`;
+    else if (filter === 'today') sqlQuery += ` AND a.pub_date > NOW() - INTERVAL '24 hours'`;
 
     if (search) {
-      sqlQuery += ` AND (
-        a.title ILIKE $${params.length + 1}
-        OR a.excerpt ILIKE $${params.length + 1}
-      )`;
-      const searchPattern = `%${search}%`;
-      params.push(searchPattern);
+      sqlQuery += ` AND (a.title ILIKE $${params.length + 1} OR a.excerpt ILIKE $${params.length + 1})`;
+      params.push(`%${search}%`);
     }
 
-    const countQuery = `SELECT COUNT(*) as count FROM articles a JOIN sources s ON a.source_id = s.id WHERE 1=1`
-      + (sourceId ? ` AND a.source_id = $1` : '')
-      + (filter === 'unread' ? ` AND a.read = false` : '')
-      + (filter === 'read' ? ` AND a.read = true` : '')
-      + (filter === 'saved' ? ` AND a.saved = true` : '')
-      + (filter === 'today' ? ` AND a.pub_date > NOW() - INTERVAL '24 hours'` : '');
+    // Count total (rebuild conditions to avoid SELECT * issue)
+    let countQuery = `SELECT COUNT(*) as count FROM articles a JOIN sources s ON a.source_id = s.id WHERE 1=1`;
+    const countParams = [...params];
+    if (sourceId) countQuery += ` AND a.source_id = $1`;
+    if (filter === 'unread') countQuery += ` AND a.read = false`;
+    else if (filter === 'read') countQuery += ` AND a.read = true`;
+    else if (filter === 'saved') countQuery += ` AND a.saved = true`;
+    else if (filter === 'today') countQuery += ` AND a.pub_date > NOW() - INTERVAL '24 hours'`;
 
-    const countParams = sourceId ? [sourceId] : [];
-    const countResult = await query(countQuery, countParams);
+    const countResult = await query(countQuery, sourceId ? [sourceId] : []);
     const total = parseInt(countResult.rows[0].count);
 
     sqlQuery += ` ORDER BY a.pub_date DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
-    params.push(limit);
-    params.push(offset);
+    params.push(limit, offset);
 
     const result = await query(sqlQuery, params);
 
     return new Response(
       JSON.stringify({
         articles: result.rows,
-        pagination: {
-          total,
-          limit,
-          offset,
-          hasMore: offset + limit < total
-        }
+        pagination: { total, limit, offset, hasMore: offset + limit < total }
       }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      }
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     await logError('/api/articles', error, error.stack);
     console.error('Error fetching articles:', error);
-
     return new Response(
       JSON.stringify({ error: 'Failed to fetch articles' }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }

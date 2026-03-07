@@ -4,14 +4,11 @@ import { logError } from './_logger.js';
 
 async function handler(request) {
   if (request.method !== 'GET') {
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
-      { status: 405, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: { 'Content-Type': 'application/json' } });
   }
 
   try {
-    // FIX: Use dummy base to handle Vercel's relative request.url
+    // FIX: use dummy base for Vercel's relative URLs
     const url = new URL(request.url, 'http://localhost');
     const searchQuery = url.searchParams.get('q') || '';
     const limit = Math.min(parseInt(url.searchParams.get('limit')) || 50, 200);
@@ -24,49 +21,28 @@ async function handler(request) {
       );
     }
 
-    const searchPattern = `%${searchQuery}%`;
-
     const result = await query(
       `SELECT 
-        a.id,
-        a.title,
-        a.url,
-        a.excerpt,
-        a.pub_date,
-        a.read,
-        a.saved,
-        a.read_time_minutes,
+        a.id, a.title, a.url, a.excerpt, a.pub_date, a.read, a.saved, a.read_time_minutes,
         s.id as source_id,
         s.name as source_title,
-        CASE 
-          WHEN a.title ILIKE $1 THEN 2
-          ELSE 1
-        END as relevance
+        CASE WHEN a.title ILIKE $1 THEN 2 ELSE 1 END as relevance
       FROM articles a
       JOIN sources s ON a.source_id = s.id
-      WHERE a.title ILIKE $1 
-         OR a.excerpt ILIKE $1
+      WHERE a.title ILIKE $1 OR a.excerpt ILIKE $1
       ORDER BY relevance DESC, a.pub_date DESC
       LIMIT $2 OFFSET $3`,
-      [searchPattern, limit, offset]
+      [`%${searchQuery}%`, limit, offset]
     );
 
     return new Response(
-      JSON.stringify({
-        results: result.rows,
-        query: searchQuery,
-        count: result.rows.length
-      }),
+      JSON.stringify({ results: result.rows, query: searchQuery, count: result.rows.length }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     await logError('/api/search', error, error.stack);
     console.error('Error searching articles:', error);
-
-    return new Response(
-      JSON.stringify({ error: 'Failed to search articles' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: 'Failed to search articles' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 }
 

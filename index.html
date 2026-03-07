@@ -330,8 +330,8 @@
     <div class="modal-section-title">Add New Source</div>
     <div class="add-form">
       <input type="text" class="form-input" id="sourceName"    placeholder="Source name">
-      <input type="url"  class="form-input" id="sourceUrl"     placeholder="Website URL">
-      <input type="url"  class="form-input" id="sourceFeedUrl" placeholder="RSS Feed URL">
+      <input type="url"  class="form-input" id="sourceUrl"     placeholder="Website URL (optional)">
+      <input type="url"  class="form-input" id="sourceFeedUrl" placeholder="RSS Feed URL (required)">
       <button class="add-btn" id="addBtn" onclick="addSource()">+ Add Source</button>
     </div>
   </div>
@@ -341,10 +341,10 @@
 
 <script>
 // ========== API CONFIGURATION ==========
-const API_BASE = 'https://neerajfeed.vercel.app'; // Your Vercel domain
-const API_KEY = localStorage.getItem('api_key') || '5cbbe097edc4435bba90114ab1c05799'; // Replace with actual key
+// FIX: Use the correct production domain
+const API_BASE = 'https://myreadfeed.vercel.app';
+const API_KEY = localStorage.getItem('api_key') || '5cbbe097edc4435bba90114ab1c05799';
 
-// Helper function to make authenticated API calls
 async function apiCall(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`;
   const isGet = (options.method || 'GET') === 'GET';
@@ -354,16 +354,12 @@ async function apiCall(endpoint, options = {}) {
     ...options.headers
   };
 
-  // Add API key for POST/PUT/DELETE requests
   if (!isGet) {
     headers['Authorization'] = `Bearer ${API_KEY}`;
   }
 
   try {
-    const response = await fetch(url, {
-      ...options,
-      headers
-    });
+    const response = await fetch(url, { ...options, headers });
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
@@ -545,11 +541,14 @@ function renderSourceList(){
 }
 
 async function addSource(){
-  const name=document.getElementById('sourceName').value.trim(),url=document.getElementById('sourceUrl').value.trim(),feedUrl=document.getElementById('sourceFeedUrl').value.trim();
+  const name=document.getElementById('sourceName').value.trim();
+  const url=document.getElementById('sourceUrl').value.trim();
+  const feedUrl=document.getElementById('sourceFeedUrl').value.trim();
   if(!name||!feedUrl){toast('Name and RSS feed URL are required');return;}
   const btn=document.getElementById('addBtn');btn.disabled=true;btn.textContent='Adding…';
   try{
-    const data = await apiCall('/api/sources',{method:'POST',body:JSON.stringify({title:name,url:url||feedUrl})});
+    // FIX: send feedUrl as a separate field so the API stores it in the feed_url column
+    await apiCall('/api/sources',{method:'POST',body:JSON.stringify({title:name,url:url||feedUrl,feedUrl:feedUrl})});
     await loadSources();
     document.getElementById('sourceName').value='';
     document.getElementById('sourceUrl').value='';
