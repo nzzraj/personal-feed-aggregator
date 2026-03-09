@@ -1,13 +1,8 @@
-// Works with both Fetch API Request (headers.get) and Node IncomingMessage (headers['x'])
-function getHeader(request, name) {
-  if (typeof request.headers?.get === 'function') {
-    return request.headers.get(name);
-  }
-  return request.headers?.[name.toLowerCase()] ?? null;
-}
+// By the time this runs, request has already been normalized by withCors
+// into a proper Fetch API Request, so .headers.get() always works.
 
 export function validateApiKey(request) {
-  const authHeader = getHeader(request, 'authorization');
+  const authHeader = request.headers.get('authorization');
 
   if (!authHeader) {
     return { valid: false, error: 'Missing Authorization header', status: 401 };
@@ -22,8 +17,7 @@ export function validateApiKey(request) {
   const expectedKey = process.env.API_KEY;
 
   if (!expectedKey) {
-    // Env var not configured — log loudly but don't 500. Accept any non-empty token.
-    console.warn('WARNING: API_KEY env var is not set. All write requests are being accepted.');
+    console.warn('WARNING: API_KEY env var not set — accepting any non-empty token.');
     return { valid: !!bearerToken, error: bearerToken ? null : 'Missing token', status: bearerToken ? 200 : 401 };
   }
 
@@ -31,7 +25,7 @@ export function validateApiKey(request) {
   return {
     valid: isValid,
     error: isValid ? null : 'Invalid API key',
-    status: isValid ? 200 : 401
+    status: isValid ? 200 : 401,
   };
 }
 
@@ -42,11 +36,10 @@ export function withAuth(handler) {
       if (!auth.valid) {
         return new Response(JSON.stringify({ error: auth.error }), {
           status: auth.status,
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 'Content-Type': 'application/json' },
         });
       }
     }
-    // Always forward context so dynamic routes get their params
     return handler(request, context);
   };
 }
@@ -56,7 +49,7 @@ export function getCorsHeaders() {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
   };
 }
 
