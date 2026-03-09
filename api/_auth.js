@@ -1,5 +1,14 @@
+// Works with both Fetch API Request (headers.get) and Node IncomingMessage (headers['x'])
+function getHeader(request, name) {
+  if (typeof request.headers?.get === 'function') {
+    return request.headers.get(name);
+  }
+  return request.headers?.[name.toLowerCase()] ?? null;
+}
+
 export function validateApiKey(request) {
-  const authHeader = request.headers.get('authorization');
+  const authHeader = getHeader(request, 'authorization');
+
   if (!authHeader) {
     return { valid: false, error: 'Missing Authorization header', status: 401 };
   }
@@ -12,10 +21,9 @@ export function validateApiKey(request) {
   const bearerToken = parts[1];
   const expectedKey = process.env.API_KEY;
 
-  // If API_KEY env var not configured, log a warning but don't crash with 500.
-  // In dev/misconfigured environments, accept any non-empty token.
   if (!expectedKey) {
-    console.warn('WARNING: API_KEY environment variable is not set. All write requests are being accepted. Set API_KEY in Vercel environment variables.');
+    // Env var not configured — log loudly but don't 500. Accept any non-empty token.
+    console.warn('WARNING: API_KEY env var is not set. All write requests are being accepted.');
     return { valid: !!bearerToken, error: bearerToken ? null : 'Missing token', status: bearerToken ? 200 : 401 };
   }
 
@@ -38,7 +46,7 @@ export function withAuth(handler) {
         });
       }
     }
-    // Forward context so dynamic route handlers (e.g. [id].js) get params
+    // Always forward context so dynamic routes get their params
     return handler(request, context);
   };
 }
