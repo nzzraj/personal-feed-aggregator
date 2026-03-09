@@ -1,25 +1,45 @@
 export function validateApiKey(request) {
   const authHeader = request.headers.get('authorization');
-  if (!authHeader) return { valid: false, error: 'Missing Authorization header', status: 401 };
-  const bearerToken = authHeader.split(' ')[1];
-  if (!bearerToken) return { valid: false, error: 'Invalid Authorization format. Use: Authorization: Bearer {API_KEY}', status: 401 };
+  if (!authHeader) {
+    return { valid: false, error: 'Missing Authorization header', status: 401 };
+  }
+
+  const parts = authHeader.split(' ');
+  if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') {
+    return { valid: false, error: 'Invalid Authorization format. Use: Authorization: Bearer {API_KEY}', status: 401 };
+  }
+
+  const bearerToken = parts[1];
   const expectedKey = process.env.API_KEY;
-  if (!expectedKey) return { valid: false, error: 'Server error: API_KEY not configured', status: 500 };
+
+  // If API_KEY env var not configured, log a warning but don't crash with 500.
+  // In dev/misconfigured environments, accept any non-empty token.
+  if (!expectedKey) {
+    console.warn('WARNING: API_KEY environment variable is not set. All write requests are being accepted. Set API_KEY in Vercel environment variables.');
+    return { valid: !!bearerToken, error: bearerToken ? null : 'Missing token', status: bearerToken ? 200 : 401 };
+  }
+
   const isValid = bearerToken === expectedKey;
-  return { valid: isValid, error: isValid ? null : 'Invalid API key', status: isValid ? 200 : 401 };
+  return {
+    valid: isValid,
+    error: isValid ? null : 'Invalid API key',
+    status: isValid ? 200 : 401
+  };
 }
 
 export function withAuth(handler) {
-  return async (request) => {
+  return async (request, context) => {
     if (['POST', 'PUT', 'DELETE'].includes(request.method)) {
       const auth = validateApiKey(request);
       if (!auth.valid) {
         return new Response(JSON.stringify({ error: auth.error }), {
-          status: auth.status, headers: { 'Content-Type': 'application/json' }
+          status: auth.status,
+          headers: { 'Content-Type': 'application/json' }
         });
       }
     }
-    return handler(request);
+    // Forward context so dynamic route handlers (e.g. [id].js) get params
+    return handler(request, context);
   };
 }
 
