@@ -3,7 +3,7 @@ import pg from 'pg';
 const { Pool } = pg;
 
 if (!process.env.DATABASE_URL) {
-  console.error('❌ DATABASE_URL environment variable is not set.');
+  console.error('DATABASE_URL environment variable is not set.');
 }
 
 let pool = null;
@@ -12,15 +12,16 @@ function getPool() {
   if (!pool) {
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
-      max: 1,
+      max: 3,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
+      connectionTimeoutMillis: 10000,  // increased from 5s → 10s for cold starts
       statement_timeout: 30000,
-      idle_in_transaction_session_timeout: 10000
+      idle_in_transaction_session_timeout: 10000,
+      ssl: process.env.DATABASE_URL?.includes('supabase') ? { rejectUnauthorized: false } : undefined,
     });
     pool.on('error', (err) => {
       console.error('Unexpected error on idle client', err);
-      pool = null; // force reconnect next time
+      pool = null; // force reconnect
     });
   }
   return pool;
@@ -33,8 +34,8 @@ export async function query(sql, params) {
   } catch (error) {
     console.error('Query error:', {
       message: error.message,
-      sql: sql.substring(0, 100),
-      timestamp: new Date().toISOString()
+      sql: sql.substring(0, 120),
+      timestamp: new Date().toISOString(),
     });
     throw error;
   }
