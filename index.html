@@ -117,6 +117,7 @@
     .panel-section{display:flex;flex-direction:column;gap:10px;}
     .panel-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-3);font-weight:500;}
 
+    /* Reading progress ring */
     .progress-widget{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:10px;transition:background 0.3s,border-color 0.3s;}
     .progress-ring-wrap{position:relative;width:80px;height:80px;}
     .progress-ring{transform:rotate(-90deg);}
@@ -128,17 +129,20 @@
     .progress-label{font-size:12px;color:var(--text-2);text-align:center;line-height:1.4;}
     .progress-label strong{color:var(--text);font-weight:600;}
 
+    /* Stat pills */
     .stat-pills{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
     .stat-pill{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px 10px;text-align:center;transition:background 0.3s,border-color 0.3s;}
     .stat-pill-num{font-family:'Lora',serif;font-size:22px;font-weight:600;color:var(--text);display:block;line-height:1;margin-bottom:3px;}
     .stat-pill-lbl{font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:1.5px;font-weight:500;}
 
+    /* Top sources */
     .top-source-item{display:flex;align-items:center;gap:8px;padding:6px 0;}
     .top-source-bar-wrap{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
     .top-source-bar{height:100%;border-radius:2px;background:var(--accent);transition:width 0.6s ease;}
     .top-source-name{font-size:12px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;}
     .top-source-count{font-size:11px;color:var(--text-3);font-weight:500;flex-shrink:0;}
 
+    /* Last refreshed */
     .last-refresh{font-size:11.5px;color:var(--text-3);padding:10px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;text-align:center;line-height:1.5;transition:background 0.3s,border-color 0.3s;}
     .last-refresh strong{color:var(--text-2);display:block;font-size:12px;margin-bottom:2px;}
 
@@ -171,7 +175,7 @@
     /* ── PANEL TOGGLE ── */
     .panel-toggle{background:none;border:none;cursor:pointer;color:var(--text-3);padding:4px 6px;border-radius:5px;font-size:16px;line-height:1;transition:all 0.15s ease;margin-left:8px;flex-shrink:0;}
     .panel-toggle:hover{background:var(--bg-hover);color:var(--text);}
-
+    
     /* ── MOBILE BOTTOM NAV ── */
     .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:60;background:var(--bg-card);border-top:1px solid var(--border);padding:8px 0 max(8px, env(safe-area-inset-bottom));grid-template-columns:repeat(5,1fr);transition:background 0.3s,border-color 0.3s;}
     .mob-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;border:none;background:none;color:var(--text-3);font-family:'Figtree',sans-serif;font-size:10px;font-weight:500;transition:color 0.15s;-webkit-tap-highlight-color:transparent;}
@@ -188,6 +192,8 @@
       .mobile-nav{display:grid;}
       .theme-btn{top:14px;right:14px;}
       .main-header-top{flex-direction:column;gap:4px;align-items:flex-start;}
+      .filter-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;flex-wrap:nowrap;}
+      .tab{white-space:nowrap;}
       .modal{padding:24px 20px;max-height:90vh;border-radius:20px 20px 0 0;width:100%;position:fixed;bottom:0;left:0;right:0;margin:0;}
       .modal-overlay{align-items:flex-end;}
     }
@@ -230,6 +236,7 @@
     <div class="sidebar-bottom">
       <button class="refresh-btn" id="refreshBtn" onclick="refreshFeeds()">↻ &nbsp;Refresh Feeds</button>
       <button class="manage-btn" onclick="openModal()">⚙ Manage Sources</button>
+      <button class="manage-btn" id="settingsBtn" onclick="openSettings()" style="font-size:12px;opacity:0.7">🔑 API Key</button>
     </div>
   </aside>
 
@@ -258,6 +265,7 @@
 
   <!-- RIGHT PANEL -->
   <div class="right-panel">
+
     <div class="panel-section">
       <div class="panel-label">Read progress</div>
       <div class="progress-widget">
@@ -278,10 +286,22 @@
     <div class="panel-section">
       <div class="panel-label">Overview</div>
       <div class="stat-pills">
-        <div class="stat-pill"><span class="stat-pill-num" id="rp-total">0</span><span class="stat-pill-lbl">Total</span></div>
-        <div class="stat-pill"><span class="stat-pill-num" id="rp-unread">0</span><span class="stat-pill-lbl">Unread</span></div>
-        <div class="stat-pill"><span class="stat-pill-num" id="rp-today">0</span><span class="stat-pill-lbl">Today</span></div>
-        <div class="stat-pill"><span class="stat-pill-num" id="rp-sources">0</span><span class="stat-pill-lbl">Sources</span></div>
+        <div class="stat-pill">
+          <span class="stat-pill-num" id="rp-total">0</span>
+          <span class="stat-pill-lbl">Total</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-pill-num" id="rp-unread">0</span>
+          <span class="stat-pill-lbl">Unread</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-pill-num" id="rp-today">0</span>
+          <span class="stat-pill-lbl">Today</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-pill-num" id="rp-sources">0</span>
+          <span class="stat-pill-lbl">Sources</span>
+        </div>
       </div>
     </div>
 
@@ -291,8 +311,11 @@
     </div>
 
     <div class="panel-section" style="margin-top:auto">
-      <div class="last-refresh" id="lastRefresh"><strong>Last refreshed</strong>Never</div>
+      <div class="last-refresh" id="lastRefresh">
+        <strong>Last refreshed</strong>Never
+      </div>
     </div>
+
   </div>
 </div>
 
@@ -307,42 +330,85 @@
     <ul class="source-list" id="sourceList"></ul>
     <div class="modal-section-title">Add New Source</div>
     <div class="add-form">
-      <input type="text" class="form-input" id="sourceName"    placeholder="Source name (e.g. Paul Graham)">
-      <input type="url"  class="form-input" id="sourceUrl"     placeholder="Website URL (optional, e.g. https://paulgraham.com)">
-      <input type="url"  class="form-input" id="sourceFeedUrl" placeholder="RSS Feed URL (required, e.g. https://paulgraham.com/rss.html)">
+      <input type="text" class="form-input" id="sourceName"    placeholder="Source name">
+      <input type="url"  class="form-input" id="sourceUrl"     placeholder="Website URL (optional)">
+      <input type="url"  class="form-input" id="sourceFeedUrl" placeholder="RSS Feed URL (required)">
       <button class="add-btn" id="addBtn" onclick="addSource()">+ Add Source</button>
     </div>
   </div>
 </div>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="authModal" onclick="closeAuthModalOnBg(event)">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-header">
+      <h2 class="modal-title"><span id="authModalIcon">🔒</span> Admin <span style="color:var(--accent);font-style:italic">Login</span></h2>
+      <button class="modal-close" onclick="closeAuthModal()">×</button>
+    </div>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:20px;line-height:1.5">
+      Enter your admin password to enable write operations.
+    </p>
+    <div class="add-form">
+      <input
+        type="password"
+        class="form-input"
+        id="adminPasswordInput"
+        placeholder="Admin password"
+        onkeydown="if(event.key==='Enter')submitAuth()"
+        autocomplete="current-password"
+      >
+      <button class="add-btn" id="authSubmitBtn" onclick="submitAuth()">Unlock</button>
+    </div>
+    <p id="authError" style="font-size:12px;color:#e05555;margin-top:10px;display:none"></p>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
+
 
 <script>
 // ========== API CONFIGURATION ==========
-// Use relative URLs so it works on any domain (no hardcoded URL needed)
-const API_BASE = '';
-const API_KEY = '5cbbe097edc4435bba90114ab1c05799';
+// FIX: Use the correct production domain
+const API_BASE = 'https://myreadfeed.vercel.app';
+// ── Auth token management ──────────────────────────────────────────────────
+// JWT is stored in sessionStorage — expires when tab closes or after 8h.
+// Never stored in source code; obtained by posting the admin password to /api/auth.
+function getToken() { return sessionStorage.getItem('readfeed_token') || ''; }
+function setToken(t) { sessionStorage.setItem('readfeed_token', t); }
+function clearToken() { sessionStorage.removeItem('readfeed_token'); }
+function isLoggedIn() { return !!getToken(); }
 
 async function apiCall(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`;
   const isGet = (options.method || 'GET') === 'GET';
-
+  
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers
   };
 
   if (!isGet) {
-    headers['Authorization'] = `Bearer ${API_KEY}`;
+    const token = getToken();
+    if (!token) {
+      // Token missing — open the login modal instead of throwing
+      openAuthModal({ onSuccess: () => apiCall(endpoint, options) });
+      throw new Error('Login required');
+    }
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(url, { ...options, headers });
+  try {
+    const response = await fetch(url, { ...options, headers });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.error || `HTTP ${response.status}`);
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || `HTTP ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error(`API call failed: ${endpoint}`, error);
+    throw error;
   }
-
-  return response.json();
 }
 
 // ========== APP STATE ==========
@@ -352,9 +418,7 @@ let articles=[],sources=[],currentFilter='all',searchTerm='',activeSource=null;
 // ========== INITIALIZATION ==========
 function init(){
   setDate();restoreTheme();loadData();
-  document.getElementById('searchInput').addEventListener('input',e=>{
-    searchTerm=e.target.value.toLowerCase();render();
-  });
+  document.getElementById('searchInput').addEventListener('input',e=>{searchTerm=e.target.value.toLowerCase();render();});
 }
 
 function setDate(){
@@ -368,10 +432,10 @@ async function loadData(){
 async function loadArticles(){
   try{
     const data = await apiCall('/api/articles');
-    articles = Array.isArray(data.articles) ? data.articles : (Array.isArray(data) ? data : []);
+    articles = Array.isArray(data.articles) ? data.articles : data;
     render();
   }catch(e){
-    showEmpty('Could not load articles. Check your connection.');
+    showEmpty('Could not load articles. Try refreshing.');
     console.error('Load articles failed:', e);
   }
 }
@@ -393,7 +457,7 @@ function setFilter(f,el){
   document.querySelectorAll('.nav-item,.tab').forEach(e=>e.classList.remove('active'));
   document.querySelectorAll(`[data-filter="${f}"]`).forEach(e=>e.classList.add('active'));
   const t={all:'All',unread:'Unread',today:'Today',week:'This Week'};
-  document.getElementById('sectionTitle').innerHTML=`${t[f]||f} <span>Articles</span>`;
+  document.getElementById('sectionTitle').innerHTML=`${t[f]} <span>Articles</span>`;
   render();
 }
 
@@ -406,7 +470,7 @@ function filterBySource(id,name){
 
 function getFiltered(){
   let list=[...articles];
-  if(activeSource!==null)list=list.filter(a=>String(a.source_id)===String(activeSource));
+  if(activeSource!==null)list=list.filter(a=>a.source_id==activeSource);
   if(searchTerm)list=list.filter(a=>(a.title||'').toLowerCase().includes(searchTerm)||(a.excerpt||'').toLowerCase().includes(searchTerm));
   const now=new Date(),today=new Date(now.getFullYear(),now.getMonth(),now.getDate()),week=new Date(today);
   week.setDate(week.getDate()-7);
@@ -417,24 +481,18 @@ function getFiltered(){
 }
 
 function render(){
-  updateStats();
-  const list=getFiltered();
-  const el=document.getElementById('articlesList');
-  if(!list.length){
-    el.innerHTML=`<div class="empty-state"><div style="font-size:28px;margin-bottom:8px">◌</div>No articles found.<p>${articles.length===0?'Click "Refresh Feeds" to fetch articles.':'Try a different filter.'}</p></div>`;
-    return;
-  }
+  updateStats();const list=getFiltered();const el=document.getElementById('articlesList');
+  if(!list.length){el.innerHTML=`<div class="empty-state"><div style="font-size:28px;margin-bottom:8px">◌</div>No articles found.<p>${articles.length===0?'Click "Refresh Feeds" to fetch articles.':'Try a different filter.'}</p></div>`;return;}
   const groups={};
   list.forEach(a=>{const k=groupLabel(new Date(a.pub_date));if(!groups[k])groups[k]=[];groups[k].push(a);});
   el.innerHTML=Object.entries(groups).map(([label,items])=>`<div class="section-divider">${label} · ${items.length} article${items.length>1?'s':''}</div>${items.map(cardHtml).join('')}`).join('');
 }
 
 function cardHtml(a){
-  const idx=sources.findIndex(s=>String(s.id)===String(a.source_id));
-  const color=COLORS[Math.max(0,idx)%COLORS.length];
-  const sourceName=a.source_title||(sources.find(s=>String(s.id)===String(a.source_id))?.title)||'Unknown';
+  const idx=sources.findIndex(s=>s.id==a.source_id);const color=COLORS[Math.max(0,idx)%COLORS.length];
+  const sourceName = sources.find(s => s.id === a.source_id)?.title || a.source_title || 'Unknown';
   const excerpt=(a.excerpt||'').substring(0,140);
-  return`<div class="article-card ${a.read?'read':'unread'}" onclick="openArticle(${a.id},'${esc(a.url||'')}')"><div><div class="card-source" style="color:${color}"><div class="card-source-dot" style="background:${color}"></div>${esc(sourceName)}</div><div class="card-title">${esc(a.title||'')}</div>${excerpt?`<div class="card-excerpt">${esc(excerpt)}…</div>`:''}</div><div class="card-meta"><span class="card-date">${relDate(new Date(a.pub_date))}</span><span class="card-badge ${a.read?'badge-read':'badge-new'}">${a.read?'Read':'New'}</span></div></div>`;
+  return`<div class="article-card ${a.read?'read':'unread'}" onclick="openArticle('${a.id}','${esc(a.url||'')}')"><div><div class="card-source" style="color:${color}"><div class="card-source-dot" style="background:${color}"></div>${esc(sourceName)}</div><div class="card-title">${esc(a.title||'')}</div>${excerpt?`<div class="card-excerpt">${esc(excerpt)}…</div>`:''}</div><div class="card-meta"><span class="card-date">${relDate(new Date(a.pub_date))}</span><span class="card-badge ${a.read?'badge-read':'badge-new'}">${a.read?'Read':'New'}</span></div></div>`;
 }
 
 function renderSidebar(){
@@ -452,6 +510,7 @@ function updateStats(){
   document.getElementById('count-unread').textContent=u;
   document.getElementById('count-today').textContent=t;
   document.getElementById('count-week').textContent=w;
+
   document.getElementById('rp-total').textContent=total;
   document.getElementById('rp-unread').textContent=u;
   document.getElementById('rp-today').textContent=t;
@@ -461,17 +520,24 @@ function updateStats(){
   const circ=213.6,offset=circ-(pct/100)*circ;
   document.getElementById('progressRing').style.strokeDashoffset=offset;
   document.getElementById('progressPct').textContent=pct+'%';
-  document.getElementById('progressLabel').innerHTML=total>0?`<strong>${read}</strong> of ${total} read`:'No articles yet';
+  document.getElementById('progressLabel').innerHTML=total>0
+    ?`<strong>${read}</strong> of ${total} read`
+    :'No articles yet';
 
   const counts={};
   articles.forEach(a=>{
-    const sourceName=a.source_title||(sources.find(s=>String(s.id)===String(a.source_id))?.title);
+    const sourceName = sources.find(s => s.id === a.source_id)?.title || a.source_title;
     if(sourceName)counts[sourceName]=(counts[sourceName]||0)+1;
   });
   const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const max=sorted[0]?sorted[0][1]:1;
   document.getElementById('topSources').innerHTML=sorted.length
-    ?sorted.map(([name,cnt],i)=>`<div class="top-source-item"><div class="top-source-name" title="${esc(name)}" style="color:${COLORS[i%COLORS.length]}">${esc(name)}</div><div class="top-source-bar-wrap"><div class="top-source-bar" style="width:${Math.round((cnt/max)*100)}%;background:${COLORS[i%COLORS.length]}"></div></div><div class="top-source-count">${cnt}</div></div>`).join('')
+    ?sorted.map(([name,cnt],i)=>`
+      <div class="top-source-item">
+        <div class="top-source-name" title="${esc(name)}" style="color:${COLORS[i%COLORS.length]}">${esc(name)}</div>
+        <div class="top-source-bar-wrap"><div class="top-source-bar" style="width:${Math.round((cnt/max)*100)}%;background:${COLORS[i%COLORS.length]}"></div></div>
+        <div class="top-source-count">${cnt}</div>
+      </div>`).join('')
     :'<div style="font-size:12px;color:var(--text-3)">No data yet</div>';
 }
 
@@ -479,21 +545,20 @@ function updateStats(){
 async function openArticle(id,url){
   try{
     await apiCall(`/api/articles/${id}`,{method:'PUT',body:JSON.stringify({read:true})});
-    const a=articles.find(x=>x.id===id||String(x.id)===String(id));
+    const a=articles.find(x=>x.id===id);
     if(a){a.read=true;render();}
   }catch(e){console.error('Mark read failed:', e);}
-  if(url)window.open(url,'_blank');
+  window.open(url,'_blank');
 }
 
 async function refreshFeeds(){
-  const btn=document.getElementById('refreshBtn');
-  btn.disabled=true;btn.innerHTML='<span class="spin">↻</span> &nbsp;Refreshing…';
+  const btn=document.getElementById('refreshBtn');btn.disabled=true;btn.innerHTML='<span class="spin">↻</span> &nbsp;Refreshing…';
   try{
-    const data=await apiCall('/api/refresh',{method:'POST'});
+    const data = await apiCall('/api/refresh',{method:'POST'});
     await loadData();
     const now=new Date();
     document.getElementById('lastRefresh').innerHTML=`<strong>Last refreshed</strong>${now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}`;
-    toast(`✓ ${data.articlesInserted||0} new articles added`);
+    toast(`✓ ${data.articlesInserted || 0} new articles added`);
     btn.innerHTML='✓ &nbsp;Done!';
     setTimeout(()=>{btn.innerHTML='↻ &nbsp;Refresh Feeds';btn.disabled=false;},2500);
   }catch(e){
@@ -510,36 +575,26 @@ function closeModal(){document.getElementById('modalOverlay').classList.remove('
 function closeModalOnBg(e){if(e.target.id==='modalOverlay')closeModal();}
 
 function renderSourceList(){
-  document.getElementById('sourceList').innerHTML=sources.length
-    ?sources.map(s=>`<li class="source-list-item"><div><div class="source-list-name">${esc(s.title||s.name||'')}</div><div class="source-list-url">${esc(s.url||s.website_url||'')}</div></div><button class="delete-btn" onclick="deleteSource('${s.id}')">Delete</button></li>`).join('')
-    :'<li style="color:var(--text-3);font-size:13px;padding:8px 0">No sources yet.</li>';
+  document.getElementById('sourceList').innerHTML=sources.length?sources.map(s=>`<li class="source-list-item"><div><div class="source-list-name">${esc(s.title||s.name)}</div><div class="source-list-url">${esc(s.url||'')}</div></div><button class="delete-btn" onclick="deleteSource('${s.id}')">Delete</button></li>`).join(''):'<li style="color:var(--text-3);font-size:13px;padding:8px 0">No sources yet.</li>';
 }
 
 async function addSource(){
   const name=document.getElementById('sourceName').value.trim();
   const url=document.getElementById('sourceUrl').value.trim();
   const feedUrl=document.getElementById('sourceFeedUrl').value.trim();
-
-  if(!feedUrl){toast('RSS feed URL is required');return;}
-
+  if(!name||!feedUrl){toast('Name and RSS feed URL are required');return;}
   const btn=document.getElementById('addBtn');btn.disabled=true;btn.textContent='Adding…';
   try{
-    await apiCall('/api/sources',{
-      method:'POST',
-      body:JSON.stringify({
-        title: name||feedUrl,
-        url: url||feedUrl,
-        feedUrl: feedUrl
-      })
-    });
+    // FIX: send feedUrl as a separate field so the API stores it in the feed_url column
+    await apiCall('/api/sources',{method:'POST',body:JSON.stringify({title:name,url:url||feedUrl,feedUrl:feedUrl})});
     await loadSources();
     document.getElementById('sourceName').value='';
     document.getElementById('sourceUrl').value='';
     document.getElementById('sourceFeedUrl').value='';
     renderSourceList();
-    toast(`✓ Added ${name||feedUrl}`);
+    toast(`✓ Added ${name}`);
   }catch(e){
-    toast('Error: '+(e.message||'Could not add source'));
+    toast('Error: '+e.message);
     console.error('Add source failed:', e);
   }
   btn.disabled=false;btn.textContent='+ Add Source';
@@ -553,7 +608,7 @@ async function deleteSource(id){
     renderSourceList();
     toast('Source deleted');
   }catch(e){
-    toast('Error deleting source: '+(e.message||''));
+    toast('Error deleting source');
     console.error('Delete failed:', e);
   }
 }
@@ -586,64 +641,213 @@ function relDate(d){
   return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
 }
 
-function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');}
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function showEmpty(msg){document.getElementById('articlesList').innerHTML=`<div class="empty-state">${msg}</div>`;}
 
-let _tt;function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),3500);}
+let _tt;function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),3000);}
 
 // ========== PANEL TOGGLE ==========
-function togglePanel(){
-  if(window.innerWidth<=768)return;
-  const hidden=document.querySelector('.layout').classList.toggle('panel-hidden');
-  document.getElementById('panelArrow').textContent=hidden?'‹':'›';
-  localStorage.setItem('panelHidden',hidden?'1':'0');
+function togglePanel() {
+  if (window.innerWidth <= 768) return;
+  const hidden = document.querySelector('.layout').classList.toggle('panel-hidden');
+  document.getElementById('panelArrow').textContent = hidden ? '‹' : '›';
+  localStorage.setItem('panelHidden', hidden ? '1' : '0');
 }
 
-function restorePanel(){
-  if(window.innerWidth<=768)return;
-  if(localStorage.getItem('panelHidden')==='1'){
+function restorePanel() {
+  if (window.innerWidth <= 768) return;
+  if (localStorage.getItem('panelHidden') === '1') {
     document.querySelector('.layout').classList.add('panel-hidden');
-    document.getElementById('panelArrow').textContent='‹';
+    document.getElementById('panelArrow').textContent = '‹';
   }
 }
 
 // ========== MOBILE NAV ==========
-function mobFilter(f){
-  document.querySelectorAll('.mob-btn').forEach(b=>b.classList.remove('active'));
-  const btn=document.getElementById('mob-'+f);
-  if(btn)btn.classList.add('active');
-  setFilter(f,document.querySelector(`[data-filter="${f}"]`)||document.createElement('div'));
+function mobFilter(f) {
+  document.querySelectorAll('.mob-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('mob-' + f).classList.add('active');
+  setFilter(f, document.querySelector(`[data-filter="${f}"]`) || document.createElement('div'));
+}
+
+
+// ========== AUTH ==========
+let _authSuccessCallback = null;
+
+function updateLockUI() {
+  const btn = document.getElementById('lockBtn');
+  const icon = document.getElementById('lockIcon');
+  const label = document.getElementById('lockLabel');
+  if (!btn) return;
+  if (isLoggedIn()) {
+    icon.textContent = '🔓';
+    label.textContent = 'Logout';
+    btn.title = 'Click to log out';
+  } else {
+    icon.textContent = '🔒';
+    label.textContent = 'Admin';
+    btn.title = 'Admin login';
+  }
+}
+
+function toggleAuth() {
+  if (isLoggedIn()) {
+    clearToken();
+    updateLockUI();
+    toast('Logged out');
+  } else {
+    openAuthModal();
+  }
+}
+
+function openAuthModal({ onSuccess } = {}) {
+  _authSuccessCallback = onSuccess || null;
+  document.getElementById('authModal').classList.add('active');
+  document.getElementById('adminPasswordInput').value = '';
+  document.getElementById('authError').style.display = 'none';
+  setTimeout(() => document.getElementById('adminPasswordInput').focus(), 100);
+}
+
+function closeAuthModal() {
+  document.getElementById('authModal').classList.remove('active');
+  _authSuccessCallback = null;
+}
+
+function closeAuthModalOnBg(e) {
+  if (e.target.id === 'authModal') closeAuthModal();
+}
+
+async function submitAuth() {
+  const password = document.getElementById('adminPasswordInput').value.trim();
+  const errEl = document.getElementById('authError');
+  const btn = document.getElementById('authSubmitBtn');
+
+  if (!password) {
+    errEl.textContent = 'Please enter your password';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Checking…';
+  errEl.style.display = 'none';
+
+  try {
+    const res = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      errEl.textContent = data.error || 'Invalid password';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    setToken(data.token);
+    updateLockUI();
+    closeAuthModal();
+    toast('✓ Logged in — write mode active');
+
+    if (_authSuccessCallback) {
+      _authSuccessCallback();
+      _authSuccessCallback = null;
+    }
+  } catch (e) {
+    errEl.textContent = 'Network error. Try again.';
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Unlock';
+  }
 }
 
 // ========== STARTUP ==========
 restorePanel();
 restoreTheme();
 init();
+updateLockUI();
+
+
+// ========== SETTINGS / API KEY ==========
+function openSettings() {
+  const stored = getApiKey();
+  document.getElementById('apiKeyInput').value = stored ? '••••••••••••••••' : '';
+  document.getElementById('keyStatus').textContent = stored
+    ? '✓ Key is set — paste a new one to replace it'
+    : '⚠ No key set — write operations will fail';
+  document.getElementById('settingsOverlay').classList.add('active');
+  if (!stored) setTimeout(() => document.getElementById('apiKeyInput').focus(), 100);
+}
+function closeSettings() {
+  document.getElementById('settingsOverlay').classList.remove('active');
+}
+function closeSettingsOnBg(e) {
+  if (e.target.id === 'settingsOverlay') closeSettings();
+}
+function saveApiKey() {
+  const val = document.getElementById('apiKeyInput').value.trim();
+  if (!val || val.startsWith('•')) { toast('Paste a real key first'); return; }
+  setApiKey(val);
+  document.getElementById('keyStatus').textContent = '✓ Key saved';
+  toast('✓ API key saved');
+  setTimeout(closeSettings, 800);
+}
+function clearApiKey() {
+  localStorage.removeItem('readfeed_api_key');
+  document.getElementById('apiKeyInput').value = '';
+  document.getElementById('keyStatus').textContent = '⚠ Key cleared';
+  toast('API key cleared');
+}
 
 // ========== PWA SERVICE WORKER ==========
-if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('/sw.js').catch(()=>{});
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
   });
 }
 </script>
 
+  
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsOverlay" onclick="closeSettingsOnBg(event)">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <h2 class="modal-title">🔑 <span style="color:var(--accent);font-style:italic">API Key</span></h2>
+      <button class="modal-close" onclick="closeSettings()">×</button>
+    </div>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.6">
+      Required to refresh feeds and manage sources. Stored only in your browser — never sent anywhere except your own API.
+    </p>
+    <div class="add-form">
+      <input type="password" class="form-input" id="apiKeyInput" placeholder="Paste your API key here">
+      <div style="display:flex;gap:8px">
+        <button class="add-btn" style="flex:1" onclick="saveApiKey()">Save Key</button>
+        <button class="delete-btn" onclick="clearApiKey()" style="padding:10px 14px">Clear</button>
+      </div>
+    </div>
+    <p id="keyStatus" style="margin-top:12px;font-size:12px;text-align:center;color:var(--text-3)"></p>
+  </div>
+</div>
+
 <nav class="mobile-nav" id="mobileNav">
-  <button class="mob-btn active" id="mob-all" onclick="mobFilter('all')">
-    <span class="mob-icon">◈</span>All
-  </button>
-  <button class="mob-btn" id="mob-unread" onclick="mobFilter('unread')">
-    <span class="mob-icon">○</span>Unread
-  </button>
-  <button class="mob-btn" id="mob-today" onclick="mobFilter('today')">
-    <span class="mob-icon">◷</span>Today
-  </button>
-  <button class="mob-btn" id="mob-refresh" onclick="refreshFeeds()">
-    <span class="mob-icon" id="mobRefreshIcon">↻</span>Refresh
-  </button>
-  <button class="mob-btn" id="mob-sources" onclick="openModal()">
-    <span class="mob-icon">⚙</span>Sources
-  </button>
-</nav>
+    <button class="mob-btn active" id="mob-all" onclick="mobFilter('all')">
+      <span class="mob-icon">◈</span>All
+    </button>
+    <button class="mob-btn" id="mob-unread" onclick="mobFilter('unread')">
+      <span class="mob-icon">○</span>Unread
+    </button>
+    <button class="mob-btn" id="mob-today" onclick="mobFilter('today')">
+      <span class="mob-icon">◷</span>Today
+    </button>
+    <button class="mob-btn" id="mob-refresh" onclick="refreshFeeds()">
+      <span class="mob-icon" id="mobRefreshIcon">↻</span>Refresh
+    </button>
+    <button class="mob-btn" id="mob-sources" onclick="openModal()">
+      <span class="mob-icon">⚙</span>Sources
+    </button>
+  </nav>
 </body>
 </html>
