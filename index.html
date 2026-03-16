@@ -236,7 +236,9 @@
     <div class="sidebar-bottom">
       <button class="refresh-btn" id="refreshBtn" onclick="refreshFeeds()">↻ &nbsp;Refresh Feeds</button>
       <button class="manage-btn" onclick="openModal()">⚙ Manage Sources</button>
-      <button class="manage-btn" id="settingsBtn" onclick="openSettings()" style="font-size:12px;opacity:0.7">🔑 API Key</button>
+      <button class="manage-btn" id="lockBtn" onclick="toggleAuth()">
+        <span id="lockIcon">🔒</span> <span id="lockLabel">Admin</span>
+      </button>
     </div>
   </aside>
 
@@ -771,36 +773,6 @@ init();
 updateLockUI();
 
 
-// ========== SETTINGS / API KEY ==========
-function openSettings() {
-  const stored = getApiKey();
-  document.getElementById('apiKeyInput').value = stored ? '••••••••••••••••' : '';
-  document.getElementById('keyStatus').textContent = stored
-    ? '✓ Key is set — paste a new one to replace it'
-    : '⚠ No key set — write operations will fail';
-  document.getElementById('settingsOverlay').classList.add('active');
-  if (!stored) setTimeout(() => document.getElementById('apiKeyInput').focus(), 100);
-}
-function closeSettings() {
-  document.getElementById('settingsOverlay').classList.remove('active');
-}
-function closeSettingsOnBg(e) {
-  if (e.target.id === 'settingsOverlay') closeSettings();
-}
-function saveApiKey() {
-  const val = document.getElementById('apiKeyInput').value.trim();
-  if (!val || val.startsWith('•')) { toast('Paste a real key first'); return; }
-  setApiKey(val);
-  document.getElementById('keyStatus').textContent = '✓ Key saved';
-  toast('✓ API key saved');
-  setTimeout(closeSettings, 800);
-}
-function clearApiKey() {
-  localStorage.removeItem('readfeed_api_key');
-  document.getElementById('apiKeyInput').value = '';
-  document.getElementById('keyStatus').textContent = '⚠ Key cleared';
-  toast('API key cleared');
-}
 
 // ========== PWA SERVICE WORKER ==========
 if ('serviceWorker' in navigator) {
@@ -811,26 +783,6 @@ if ('serviceWorker' in navigator) {
 </script>
 
   
-<!-- SETTINGS MODAL -->
-<div class="modal-overlay" id="settingsOverlay" onclick="closeSettingsOnBg(event)">
-  <div class="modal" style="max-width:400px">
-    <div class="modal-header">
-      <h2 class="modal-title">🔑 <span style="color:var(--accent);font-style:italic">API Key</span></h2>
-      <button class="modal-close" onclick="closeSettings()">×</button>
-    </div>
-    <p style="font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.6">
-      Required to refresh feeds and manage sources. Stored only in your browser — never sent anywhere except your own API.
-    </p>
-    <div class="add-form">
-      <input type="password" class="form-input" id="apiKeyInput" placeholder="Paste your API key here">
-      <div style="display:flex;gap:8px">
-        <button class="add-btn" style="flex:1" onclick="saveApiKey()">Save Key</button>
-        <button class="delete-btn" onclick="clearApiKey()" style="padding:10px 14px">Clear</button>
-      </div>
-    </div>
-    <p id="keyStatus" style="margin-top:12px;font-size:12px;text-align:center;color:var(--text-3)"></p>
-  </div>
-</div>
 
 <nav class="mobile-nav" id="mobileNav">
     <button class="mob-btn active" id="mob-all" onclick="mobFilter('all')">
