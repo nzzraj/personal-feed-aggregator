@@ -4,11 +4,8 @@
     "api/refresh.js": { "maxDuration": 60 },
     "api/articles.js": { "maxDuration": 30 },
     "api/sources.js": { "maxDuration": 30 },
-    "api/articles/[id].js": { "maxDuration": 30 },
-    "api/sources/[id].js": { "maxDuration": 30 }
-  },
-  "routes": [
-    { "src": "/api/articles/([^/]+)", "dest": "/api/articles/[id]" },
-    { "src": "/api/sources/([^/]+)", "dest": "/api/sources/[id]" }
-  ]
+    "api/search.js": { "maxDuration": 30 },
+    "api/errors.js": { "maxDuration": 30 },
+    "api/health.js": { "maxDuration": 30 }
+  }
 }
