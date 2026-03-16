@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-title" content="ReadFeed">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/icon-192.png">
-  <title>My Reading Feed</title>
+  <title>My Feed</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -197,6 +197,15 @@
       .modal{padding:24px 20px;max-height:90vh;border-radius:20px 20px 0 0;width:100%;position:fixed;bottom:0;left:0;right:0;margin:0;}
       .modal-overlay{align-items:flex-end;}
     }
+
+    /* ── SKELETON LOADER ── */
+    .skeleton-card{background:var(--bg-card);padding:18px 22px;border-left:3px solid transparent;}
+    .skeleton-line{height:12px;border-radius:4px;background:linear-gradient(90deg,var(--border) 25%,var(--bg-hover) 50%,var(--border) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;}
+    .skeleton-line.title{height:16px;width:65%;margin-bottom:8px;}
+    .skeleton-line.source{height:9px;width:25%;margin-bottom:8px;}
+    .skeleton-line.excerpt{height:11px;width:90%;margin-bottom:4px;}
+    .skeleton-line.excerpt-short{height:11px;width:55%;}
+    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
   </style>
 </head>
 <body>
@@ -236,9 +245,8 @@
     <div class="sidebar-bottom">
       <button class="refresh-btn" id="refreshBtn" onclick="refreshFeeds()">↻ &nbsp;Refresh Feeds</button>
       <button class="manage-btn" onclick="openModal()">⚙ Manage Sources</button>
-      <button class="manage-btn" id="lockBtn" onclick="toggleAuth()">
-        <span id="lockIcon">🔒</span> <span id="lockLabel">Admin</span>
-      </button>
+      <!-- Admin mode: Shift+A on desktop, long-press logo on mobile -->
+      <div id="adminIndicator" style="display:none;text-align:center;font-size:11px;color:var(--accent);opacity:0.7;padding:4px 0">● write mode</div>
     </div>
   </aside>
 
@@ -370,13 +378,30 @@
 <script>
 // ========== API CONFIGURATION ==========
 // FIX: Use the correct production domain
-const API_BASE = 'https://myreadfeed.vercel.app';
+const API_BASE = ''; // relative URLs — works on any domain
 // ── Auth token management ──────────────────────────────────────────────────
 // JWT is stored in sessionStorage — expires when tab closes or after 8h.
 // Never stored in source code; obtained by posting the admin password to /api/auth.
-function getToken() { return sessionStorage.getItem('readfeed_token') || ''; }
-function setToken(t) { sessionStorage.setItem('readfeed_token', t); }
-function clearToken() { sessionStorage.removeItem('readfeed_token'); }
+// Token stored in localStorage so it persists across tabs.
+// JWT itself contains expiry — we check it client-side before use.
+function _parseJwtExp(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+    return payload.exp || 0;
+  } catch { return 0; }
+}
+function getToken() {
+  const t = localStorage.getItem('readfeed_token') || '';
+  if (!t) return '';
+  // Discard if expired
+  if (_parseJwtExp(t) < Math.floor(Date.now() / 1000)) {
+    localStorage.removeItem('readfeed_token');
+    return '';
+  }
+  return t;
+}
+function setToken(t) { localStorage.setItem('readfeed_token', t); }
+function clearToken() { localStorage.removeItem('readfeed_token'); }
 function isLoggedIn() { return !!getToken(); }
 
 async function apiCall(endpoint, options = {}) {
@@ -431,7 +456,22 @@ async function loadData(){
   await Promise.all([loadArticles(),loadSources()]);
 }
 
+function showSkeleton() {
+  const skeletonCard = () => `
+    <div class="skeleton-card">
+      <div class="skeleton-line source"></div>
+      <div class="skeleton-line title"></div>
+      <div class="skeleton-line excerpt"></div>
+      <div class="skeleton-line excerpt-short"></div>
+    </div>`;
+  document.getElementById('articlesList').innerHTML =
+    '<div style="display:flex;flex-direction:column;gap:1px;border-radius:12px;overflow:hidden;background:var(--border)">' +
+    Array(5).fill(0).map(skeletonCard).join('') +
+    '</div>';
+}
+
 async function loadArticles(){
+  showSkeleton();
   try{
     const data = await apiCall('/api/articles');
     articles = Array.isArray(data.articles) ? data.articles : data;
@@ -545,12 +585,14 @@ function updateStats(){
 
 // ========== ARTICLE ACTIONS ==========
 async function openArticle(id,url){
+  // Open article immediately — don't block on the read-marking request
+  if(url) window.open(url,'_blank');
+  // Mark as read in background — failure is silent, doesn't affect navigation
   try{
     await apiCall(`/api/articles/${id}`,{method:'PUT',body:JSON.stringify({read:true})});
     const a=articles.find(x=>x.id===id);
     if(a){a.read=true;render();}
   }catch(e){console.error('Mark read failed:', e);}
-  window.open(url,'_blank');
 }
 
 async function refreshFeeds(){
@@ -676,19 +718,14 @@ function mobFilter(f) {
 let _authSuccessCallback = null;
 
 function updateLockUI() {
-  const btn = document.getElementById('lockBtn');
-  const icon = document.getElementById('lockIcon');
-  const label = document.getElementById('lockLabel');
-  if (!btn) return;
-  if (isLoggedIn()) {
-    icon.textContent = '🔓';
-    label.textContent = 'Logout';
-    btn.title = 'Click to log out';
-  } else {
-    icon.textContent = '🔒';
-    label.textContent = 'Admin';
-    btn.title = 'Admin login';
-  }
+  // Show a subtle indicator when in write mode — invisible to visitors
+  const indicator = document.getElementById('adminIndicator');
+  if (indicator) indicator.style.display = isLoggedIn() ? 'block' : 'none';
+  // Update mobile nav admin button
+  const mobIcon = document.getElementById('mobAdminIcon');
+  const mobLabel = document.getElementById('mobAdminLabel');
+  if (mobIcon) mobIcon.textContent = isLoggedIn() ? '🔓' : '🔒';
+  if (mobLabel) mobLabel.textContent = isLoggedIn() ? 'Logout' : 'Admin';
 }
 
 function toggleAuth() {
@@ -700,6 +737,17 @@ function toggleAuth() {
     openAuthModal();
   }
 }
+
+// ── Keyboard shortcut: Shift+A on desktop ───────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  // Ignore if typing in an input/textarea
+  if (['INPUT','TEXTAREA'].includes(e.target.tagName)) return;
+  if (e.shiftKey && e.key === 'A') {
+    e.preventDefault();
+    toggleAuth();
+  }
+});
+
 
 function openAuthModal({ onSuccess } = {}) {
   _authSuccessCallback = onSuccess || null;
@@ -791,14 +839,15 @@ if ('serviceWorker' in navigator) {
     <button class="mob-btn" id="mob-unread" onclick="mobFilter('unread')">
       <span class="mob-icon">○</span>Unread
     </button>
-    <button class="mob-btn" id="mob-today" onclick="mobFilter('today')">
-      <span class="mob-icon">◷</span>Today
-    </button>
     <button class="mob-btn" id="mob-refresh" onclick="refreshFeeds()">
       <span class="mob-icon" id="mobRefreshIcon">↻</span>Refresh
     </button>
     <button class="mob-btn" id="mob-sources" onclick="openModal()">
       <span class="mob-icon">⚙</span>Sources
+    </button>
+    <button class="mob-btn" id="mob-admin" onclick="toggleAuth()" title="Admin">
+      <span class="mob-icon" id="mobAdminIcon">·····</span>
+      <span id="mobAdminLabel" style="font-size:9px;letter-spacing:1px">····</span>
     </button>
   </nav>
 </body>
