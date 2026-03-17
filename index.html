@@ -66,7 +66,7 @@
     .manage-btn:hover{border-color:var(--text-3);color:var(--text);background:var(--bg-hover);}
 
     /* ── THEME TOGGLE ── */
-    .theme-btn{position:fixed;top:20px;right:24px;z-index:50;background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s ease;box-shadow:0 2px 8px var(--shadow);}
+    .theme-btn{position:fixed;top:20px;right:24px;z-index:70;background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s ease;box-shadow:0 2px 8px var(--shadow);}
     .theme-btn:hover{border-color:var(--accent);}
     .theme-btn-icon{font-size:14px;line-height:1;}
     .toggle-track{width:32px;height:18px;border-radius:9px;background:var(--border);position:relative;transition:background 0.3s ease;}
@@ -87,7 +87,7 @@
     .search-input{width:100%;padding:10px 16px 10px 36px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);font-family:'Figtree',sans-serif;transition:all 0.2s ease;}
     .search-input::placeholder{color:var(--text-3);}
     .search-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(201,100,66,0.1);}
-    .filter-tabs{display:none;gap:5px;margin:16px 0 20px;animation:fadeUp 0.5s ease-out 0.25s both;}
+    .filter-tabs{display:none !important;}
     .tab{padding:7px 15px;border-radius:6px;font-size:13px;cursor:pointer;border:1px solid transparent;color:var(--text-2);background:transparent;font-family:'Figtree',sans-serif;transition:all 0.15s ease;}
     .tab:hover{background:var(--bg-hover);color:var(--text);}
     .tab.active{background:var(--accent-bg);color:var(--accent);border-color:rgba(201,100,66,0.2);font-weight:500;}
@@ -183,7 +183,6 @@
     .mob-btn:active{opacity:0.7;}
     .mob-icon{font-size:18px;line-height:1;}
     @media(max-width:768px){
-      .filter-tabs{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;flex-wrap:nowrap;}
       .panel-toggle{display:none;}
       .layout{grid-template-columns:1fr;}
       aside{display:none;}
@@ -223,25 +222,31 @@
     #adminIndicator{
       display:none;
       align-items:center;
-      justify-content:center;
-      gap:5px;
-      padding:5px 10px;
+      gap:6px;
+      padding:6px 12px;
       background:var(--accent-bg);
-      border:1px solid rgba(201,100,66,0.2);
-      border-radius:6px;
-      font-size:11px;
+      border:1px solid rgba(201,100,66,0.25);
+      border-radius:7px;
+      font-size:11.5px;
       color:var(--accent);
       font-weight:500;
-      letter-spacing:0.3px;
+      letter-spacing:0.2px;
+      cursor:pointer;
     }
+    #adminIndicator:hover{background:rgba(201,100,66,0.15);}
     #adminIndicator::before{
       content:'';
-      width:6px;height:6px;
+      width:7px;height:7px;
       border-radius:50%;
       background:var(--accent);
+      flex-shrink:0;
       animation:adminPulse 2s infinite;
     }
-    @keyframes adminPulse{0%,100%{opacity:1}50%{opacity:0.4}}
+    #adminIndicator::after{content:'↑ Shift+A to exit';}
+    @keyframes adminPulse{0%,100%{opacity:1}50%{opacity:0.35}}
+    /* Write mode — sidebar action buttons get subtle accent border */
+    .write-mode .refresh-btn{box-shadow:0 0 0 1.5px rgba(201,100,66,0.3);}
+    .write-mode .manage-btn{border-color:rgba(201,100,66,0.25);}
     /* ── MOBILE ADMIN BUTTON ── */
     #mob-admin.authed{color:var(--accent);}
     #mob-admin.authed #mobAdminIcon{filter:drop-shadow(0 0 4px var(--accent));}
@@ -275,6 +280,19 @@
     /* Unlocked state: use open padlock via CSS transform */
     .mob-admin-btn.authed .mob-admin-icon svg{
       opacity:0.85;
+    }
+
+    /* ── CENTERED MODAL (auth) — overrides mobile bottom-sheet ── */
+    .modal-overlay--centered{align-items:center !important;}
+    .modal-overlay--centered .modal{
+      position:relative !important;
+      bottom:auto !important;
+      left:auto !important;
+      right:auto !important;
+      margin:20px auto !important;
+      width:calc(100% - 40px) !important;
+      max-width:360px !important;
+      border-radius:14px !important;
     }
   </style>
 </head>
@@ -420,7 +438,7 @@
 </div>
 
 <!-- AUTH MODAL -->
-<div class="modal-overlay" id="authModal" onclick="closeAuthModalOnBg(event)">
+<div class="modal-overlay modal-overlay--centered" id="authModal" onclick="closeAuthModalOnBg(event)">
   <div class="modal" style="max-width:360px">
     <div class="modal-header">
       <h2 class="modal-title"><span id="authModalIcon">🔒</span> Admin <span style="color:var(--accent);font-style:italic">Login</span></h2>
@@ -843,10 +861,10 @@ function updateLockUI() {
   const loggedIn = isLoggedIn();
   // Subtle indicator in sidebar — invisible to visitors, obvious to you
   const indicator = document.getElementById('adminIndicator');
-  if (indicator) {
-    indicator.style.display = loggedIn ? 'flex' : 'none';
-    indicator.textContent = 'write mode';
-  }
+  if (indicator) indicator.style.display = loggedIn ? 'flex' : 'none';
+  // Toggle write-mode class on sidebar for subtle visual cues
+  const sidebar = document.querySelector('aside');
+  if (sidebar) sidebar.classList.toggle('write-mode', loggedIn);
   // Mobile nav admin button
   const mobIcon  = document.getElementById('mobAdminIcon');
   const mobLabel = document.getElementById('mobAdminLabel');
