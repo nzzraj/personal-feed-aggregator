@@ -69,7 +69,7 @@
     .theme-btn{
       position:fixed;
       top:20px;
-      right:114px; /* center of 260px right panel: 260/2 - 16px = 114px */
+      right:114px; /* centered in 260px right panel column */
       z-index:40;
       width:32px;height:32px;
       background:var(--bg-card);
@@ -125,27 +125,10 @@
     .empty-state p{margin-top:8px;font-size:13px;color:var(--text-3);}
 
     /* ── RIGHT PANEL ── */
-    .right-panel{border-left:1px solid var(--border);padding:32px 20px;position:sticky;top:0;height:100vh;overflow-y:auto;overflow-x:hidden;background:var(--bg-sidebar);display:flex;flex-direction:column;gap:24px;transition:background 0.3s,border-color 0.3s,padding 0.35s;min-width:0;} .layout.panel-hidden .right-panel{padding:0;border-left:none;overflow:hidden;}
+    .right-panel{border-left:1px solid var(--border);padding:20px 20px;position:sticky;top:0;height:100vh;overflow-y:auto;overflow-x:hidden;background:var(--bg-sidebar);display:flex;flex-direction:column;gap:24px;transition:background 0.3s,border-color 0.3s,padding 0.35s;min-width:0;} .layout.panel-hidden .right-panel{padding:0;border-left:none;overflow:hidden;}
     .panel-section{display:flex;flex-direction:column;gap:10px;}
     .panel-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-3);font-weight:500;}
 
-    /* Reading progress ring */
-    .progress-widget{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:10px;transition:background 0.3s,border-color 0.3s;}
-    .progress-ring-wrap{position:relative;width:80px;height:80px;}
-    .progress-ring{transform:rotate(-90deg);}
-    .progress-ring-bg{fill:none;stroke:var(--border);stroke-width:6;}
-    .progress-ring-fill{fill:none;stroke:var(--accent);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset 0.8s ease;}
-    .progress-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-    .progress-pct{font-family:'Lora',serif;font-size:18px;font-weight:600;color:var(--text);line-height:1;}
-    .progress-sub{font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
-    .progress-label{font-size:12px;color:var(--text-2);text-align:center;line-height:1.4;}
-    .progress-label strong{color:var(--text);font-weight:600;}
-
-    /* Stat pills */
-    .stat-pills{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-    .stat-pill{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px 10px;text-align:center;transition:background 0.3s,border-color 0.3s;}
-    .stat-pill-num{font-family:'Lora',serif;font-size:22px;font-weight:600;color:var(--text);display:block;line-height:1;margin-bottom:3px;}
-    .stat-pill-lbl{font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:1.5px;font-weight:500;}
 
     /* Top sources */
     .top-source-item{display:flex;align-items:center;gap:8px;padding:6px 0;}
@@ -366,45 +349,6 @@
 
   <!-- RIGHT PANEL -->
   <div class="right-panel">
-
-    <div class="panel-section">
-      <div class="panel-label">Read progress</div>
-      <div class="progress-widget">
-        <div class="progress-ring-wrap">
-          <svg class="progress-ring" width="80" height="80" viewBox="0 0 80 80">
-            <circle class="progress-ring-bg" cx="40" cy="40" r="34"/>
-            <circle class="progress-ring-fill" id="progressRing" cx="40" cy="40" r="34"
-              stroke-dasharray="213.6" stroke-dashoffset="213.6"/>
-          </svg>
-          <div class="progress-center">
-            <span class="progress-pct" id="progressPct">0%</span>
-          </div>
-        </div>
-        <div class="progress-label" id="progressLabel">Loading…</div>
-      </div>
-    </div>
-
-    <div class="panel-section">
-      <div class="panel-label">Overview</div>
-      <div class="stat-pills">
-        <div class="stat-pill">
-          <span class="stat-pill-num" id="rp-total">0</span>
-          <span class="stat-pill-lbl">Total</span>
-        </div>
-        <div class="stat-pill">
-          <span class="stat-pill-num" id="rp-unread">0</span>
-          <span class="stat-pill-lbl">Unread</span>
-        </div>
-        <div class="stat-pill">
-          <span class="stat-pill-num" id="rp-today">0</span>
-          <span class="stat-pill-lbl">Today</span>
-        </div>
-        <div class="stat-pill">
-          <span class="stat-pill-num" id="rp-sources">0</span>
-          <span class="stat-pill-lbl">Sources</span>
-        </div>
-      </div>
-    </div>
 
     <div class="panel-section">
       <div class="panel-label">Top sources</div>
@@ -644,17 +588,6 @@ function updateStats(){
   document.getElementById('count-unread').textContent=u;
   document.getElementById('count-today').textContent=t;
   document.getElementById('count-week').textContent=w;
-
-  document.getElementById('rp-total').textContent=total;
-  document.getElementById('rp-unread').textContent=u;
-  document.getElementById('rp-today').textContent=t;
-  document.getElementById('rp-sources').textContent=sources.length;
-
-  const pct=total>0?Math.round((read/total)*100):0;
-  const circ=213.6,offset=circ-(pct/100)*circ;
-  document.getElementById('progressRing').style.strokeDashoffset=offset;
-  document.getElementById('progressPct').textContent=pct+'%';
-  document.getElementById('progressLabel').innerHTML=total>0
     ?`<strong>${read}</strong> of ${total} read`
     :'No articles yet';
 
@@ -863,6 +796,8 @@ function togglePanel() {
 function updateThemeBtnPos(hidden) {
   const btn = document.getElementById('themeBtn');
   if (!btn) return;
+  // Panel visible: centered in 260px right column (260/2 - 16 = 114px from right)
+  // Panel hidden: move to right edge (20px)
   btn.style.right = hidden ? '20px' : '114px';
 }
 
