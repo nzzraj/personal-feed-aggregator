@@ -588,8 +588,6 @@ function updateStats(){
   document.getElementById('count-unread').textContent=u;
   document.getElementById('count-today').textContent=t;
   document.getElementById('count-week').textContent=w;
-    ?`<strong>${read}</strong> of ${total} read`
-    :'No articles yet';
 
   const counts={};
   articles.forEach(a=>{
