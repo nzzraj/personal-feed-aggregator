@@ -67,24 +67,17 @@
 
     /* ── THEME TOGGLE ── */
     .theme-btn{
-      position:fixed;
-      top:20px;
-      right:114px; /* centered in 260px right panel column */
-      z-index:40;
-      width:32px;height:32px;
-      background:var(--bg-card);
-      border:1px solid var(--border);
-      border-radius:50%;
+      width:24px;height:24px;
+      background:none;
+      border:none;
       cursor:pointer;
       display:flex;align-items:center;justify-content:center;
-      transition:border-color 0.2s,color 0.2s,transform 0.2s,right 0.35s;
-      box-shadow:0 1px 4px var(--shadow);
-      color:var(--text-2);
+      transition:color 0.2s,transform 0.3s ease;
+      color:var(--text-3);
       padding:0;
+      flex-shrink:0;
     }
-    .theme-btn:hover{border-color:var(--accent);color:var(--accent);transform:rotate(15deg);}
-    /* Smooth transition when panel toggles */
-    @media(max-width:900px){.theme-btn{display:none;}} /* hidden on mobile, use header btn */
+    .theme-btn:hover{color:var(--accent);transform:rotate(20deg);}
 
         /* ── MAIN ── */
     main{padding:40px 40px;width:100%;min-width:0;overflow-x:hidden;}
@@ -266,9 +259,6 @@
       border-radius:14px !important;
     }
 
-    /* ── MOBILE THEME BTN (in header) ── */
-    .theme-btn--mobile{display:none;}
-    @media(max-width:768px){.theme-btn--mobile{display:flex;}}
   </style>
 </head>
 <body>
@@ -276,11 +266,6 @@
 <div class="refresh-progress" id="refreshProgress"></div>
 
 
-<button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">
-  <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-  </svg>
-</button>
 
 <div class="layout">
 
@@ -323,8 +308,8 @@
         <h1 class="section-title" id="sectionTitle">All <span>Articles</span></h1>
         <div style="display:flex;align-items:center;gap:8px">
           <span class="date-badge" id="dateBadge"></span>
-          <button class="theme-btn theme-btn--mobile" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">
-            <svg id="themeIconMobile" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">
+            <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
             </svg>
           </button>
@@ -744,10 +729,8 @@ function setThemeIcon(isDark) {
     <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
     <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`
     : `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
-  ['themeIcon','themeIconMobile'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = inner;
-  });
+  const el = document.getElementById('themeIcon');
+  if (el) el.innerHTML = inner;
 }
 
 function toggleTheme(){
@@ -788,16 +771,8 @@ function togglePanel() {
   const hidden = document.querySelector('.layout').classList.toggle('panel-hidden');
   document.getElementById('panelArrow').textContent = hidden ? '‹' : '›';
   localStorage.setItem('panelHidden', hidden ? '1' : '0');
-  updateThemeBtnPos(hidden);
 }
 
-function updateThemeBtnPos(hidden) {
-  const btn = document.getElementById('themeBtn');
-  if (!btn) return;
-  // Panel visible: centered in 260px right column (260/2 - 16 = 114px from right)
-  // Panel hidden: move to right edge (20px)
-  btn.style.right = hidden ? '20px' : '114px';
-}
 
 function restorePanel() {
   if (window.innerWidth <= 768) return;
@@ -806,7 +781,6 @@ function restorePanel() {
     document.querySelector('.layout').classList.add('panel-hidden');
     document.getElementById('panelArrow').textContent = '‹';
   }
-  updateThemeBtnPos(hidden);
 }
 
 // ========== MOBILE NAV ==========
