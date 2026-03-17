@@ -67,7 +67,7 @@
 
     /* ── THEME TOGGLE ── */
     .theme-btn{
-      position:fixed;top:20px;right:24px;z-index:70;
+      position:fixed;top:20px;right:20px;z-index:20;
       width:36px;height:36px;
       background:var(--bg-card);
       border:1px solid var(--border);
@@ -75,7 +75,7 @@
       cursor:pointer;
       display:flex;align-items:center;justify-content:center;
       transition:border-color 0.2s,color 0.2s,transform 0.2s;
-      box-shadow:0 2px 8px var(--shadow);
+      box-shadow:0 1px 4px var(--shadow);
       color:var(--text-2);
       padding:0;
     }
@@ -225,33 +225,8 @@
     }
     .articles.refreshing{opacity:0.5;pointer-events:none;transition:opacity 0.2s;}
 
-    /* ── ADMIN INDICATOR ── */
-    #adminIndicator{
-      display:none;
-      align-items:center;
-      gap:6px;
-      padding:5px 10px;
-      background:var(--accent-bg);
-      border:1px solid rgba(201,100,66,0.2);
-      border-radius:6px;
-      font-size:11px;
-      color:var(--accent);
-      font-weight:500;
-      letter-spacing:0.2px;
-      cursor:pointer;
-    }
-    #adminIndicator:hover{opacity:0.8;}
-    #adminIndicator::before{
-      content:'';
-      width:6px;height:6px;
-      border-radius:50%;
-      background:var(--accent);
-      flex-shrink:0;
-      animation:adminPulse 2s infinite;
-    }
-    @keyframes adminPulse{0%,100%{opacity:1}50%{opacity:0.35}}
-    .write-mode .refresh-btn{box-shadow:0 0 0 1.5px rgba(201,100,66,0.3);}
-    .write-mode .manage-btn{border-color:rgba(201,100,66,0.25);}
+    /* ── WRITE MODE — sidebar left border accent ── */
+    aside.write-mode{border-left:3px solid var(--accent);}
     /* ── MOBILE ADMIN BUTTON ── */
     #mob-admin.authed{color:var(--accent);}
     #mob-admin.authed #mobAdminIcon{filter:drop-shadow(0 0 4px var(--accent));}
@@ -341,8 +316,7 @@
     <div class="sidebar-bottom">
       <button class="refresh-btn" id="refreshBtn" onclick="refreshFeeds()">↻ &nbsp;Refresh Feeds</button>
       <button class="manage-btn" onclick="openModal()">⚙ Manage Sources</button>
-      <!-- Admin mode: Shift+A on desktop, long-press logo on mobile -->
-      <div id="adminIndicator" onclick="toggleAuth()" title="Click to logout"></div>
+
     </div>
   </aside>
 
@@ -883,12 +857,7 @@ let _authSuccessCallback = null;
 function updateLockUI() {
   const loggedIn = isLoggedIn();
   // Subtle indicator in sidebar — invisible to visitors, obvious to you
-  const indicator = document.getElementById('adminIndicator');
-  if (indicator) {
-    indicator.style.display = loggedIn ? 'flex' : 'none';
-    indicator.textContent = loggedIn ? 'write mode' : '';
-  }
-  // Toggle write-mode class on sidebar for subtle visual cues
+  // Write mode: accent left border on sidebar — minimal, invisible to visitors
   const sidebar = document.querySelector('aside');
   if (sidebar) sidebar.classList.toggle('write-mode', loggedIn);
   // Mobile nav admin button
