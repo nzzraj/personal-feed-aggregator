@@ -67,18 +67,24 @@
 
     /* ── THEME TOGGLE ── */
     .theme-btn{
+      position:fixed;
+      top:20px;
+      right:114px; /* center of 260px right panel: 260/2 - 16px = 114px */
+      z-index:40;
       width:32px;height:32px;
-      background:transparent;
+      background:var(--bg-card);
       border:1px solid var(--border);
       border-radius:50%;
       cursor:pointer;
       display:flex;align-items:center;justify-content:center;
-      transition:border-color 0.2s,color 0.2s,transform 0.2s;
-      color:var(--text-3);
+      transition:border-color 0.2s,color 0.2s,transform 0.2s,right 0.35s;
+      box-shadow:0 1px 4px var(--shadow);
+      color:var(--text-2);
       padding:0;
-      flex-shrink:0;
     }
     .theme-btn:hover{border-color:var(--accent);color:var(--accent);transform:rotate(15deg);}
+    /* Smooth transition when panel toggles */
+    @media(max-width:900px){.theme-btn{display:none;}} /* hidden on mobile, use header btn */
 
         /* ── MAIN ── */
     main{padding:40px 40px;width:100%;min-width:0;overflow-x:hidden;}
@@ -287,6 +293,12 @@
 <div class="refresh-progress" id="refreshProgress"></div>
 
 
+<button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">
+  <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+</button>
+
 <div class="layout">
 
   <!-- LEFT SIDEBAR -->
@@ -354,13 +366,6 @@
 
   <!-- RIGHT PANEL -->
   <div class="right-panel">
-    <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
-      <button class="theme-btn" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">
-        <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-        </svg>
-      </button>
-    </div>
 
     <div class="panel-section">
       <div class="panel-label">Read progress</div>
@@ -852,14 +857,23 @@ function togglePanel() {
   const hidden = document.querySelector('.layout').classList.toggle('panel-hidden');
   document.getElementById('panelArrow').textContent = hidden ? '‹' : '›';
   localStorage.setItem('panelHidden', hidden ? '1' : '0');
+  updateThemeBtnPos(hidden);
+}
+
+function updateThemeBtnPos(hidden) {
+  const btn = document.getElementById('themeBtn');
+  if (!btn) return;
+  btn.style.right = hidden ? '20px' : '114px';
 }
 
 function restorePanel() {
   if (window.innerWidth <= 768) return;
-  if (localStorage.getItem('panelHidden') === '1') {
+  const hidden = localStorage.getItem('panelHidden') === '1';
+  if (hidden) {
     document.querySelector('.layout').classList.add('panel-hidden');
     document.getElementById('panelArrow').textContent = '‹';
   }
+  updateThemeBtnPos(hidden);
 }
 
 // ========== MOBILE NAV ==========
