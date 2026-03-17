@@ -67,20 +67,18 @@
 
     /* ── THEME TOGGLE ── */
     .theme-btn{
-      position:fixed;top:20px;right:20px;z-index:20;
-      width:36px;height:36px;
-      background:var(--bg-card);
+      width:32px;height:32px;
+      background:transparent;
       border:1px solid var(--border);
       border-radius:50%;
       cursor:pointer;
       display:flex;align-items:center;justify-content:center;
       transition:border-color 0.2s,color 0.2s,transform 0.2s;
-      box-shadow:0 1px 4px var(--shadow);
-      color:var(--text-2);
+      color:var(--text-3);
       padding:0;
+      flex-shrink:0;
     }
     .theme-btn:hover{border-color:var(--accent);color:var(--accent);transform:rotate(15deg);}
-    @media(max-width:768px){.theme-btn{top:14px;right:14px;}}
 
         /* ── MAIN ── */
     main{padding:40px 40px;width:100%;min-width:0;overflow-x:hidden;}
@@ -105,7 +103,7 @@
     .section-divider{padding:9px 24px;background:var(--bg);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-3);font-weight:500;transition:background 0.3s;}
     .article-card{background:var(--bg-card);padding:18px 22px;cursor:pointer;transition:background 0.15s ease;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start;border-left:3px solid transparent;}
     .article-card:hover{background:var(--bg-hover);}
-    .article-card.unread{border-left-color:var(--accent);}
+    /* border-left-color set per-card inline to match source color */
     .card-source{font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-3);font-weight:500;margin-bottom:4px;display:flex;align-items:center;gap:6px;}
     .card-source-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
     .card-title{font-family:'Lora',serif;font-size:15.5px;font-weight:500;color:var(--text);line-height:1.4;margin-bottom:5px;}
@@ -225,8 +223,12 @@
     }
     .articles.refreshing{opacity:0.5;pointer-events:none;transition:opacity 0.2s;}
 
-    /* ── WRITE MODE — sidebar left border accent ── */
-    aside.write-mode{border-left:3px solid var(--accent);}
+    /* ── WRITE MODE — manage sources button gets accent fill ── */
+    aside.write-mode .manage-btn{
+      background:var(--accent-bg);
+      border-color:rgba(201,100,66,0.3);
+      color:var(--accent);
+    }
     /* ── MOBILE ADMIN BUTTON ── */
     #mob-admin.authed{color:var(--accent);}
     #mob-admin.authed #mobAdminIcon{filter:drop-shadow(0 0 4px var(--accent));}
@@ -274,17 +276,16 @@
       max-width:360px !important;
       border-radius:14px !important;
     }
+
+    /* ── MOBILE THEME BTN (in header) ── */
+    .theme-btn--mobile{display:none;}
+    @media(max-width:768px){.theme-btn--mobile{display:flex;}}
   </style>
 </head>
 <body>
 
 <div class="refresh-progress" id="refreshProgress"></div>
 
-<button class="theme-btn" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">
-  <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-  </svg>
-</button>
 
 <div class="layout">
 
@@ -325,7 +326,15 @@
     <div class="main-header">
       <div class="main-header-top">
         <h1 class="section-title" id="sectionTitle">All <span>Articles</span></h1>
-        <div style="display:flex;align-items:center;gap:4px"><span class="date-badge" id="dateBadge"></span><button class="panel-toggle" id="panelToggle" onclick="togglePanel()" title="Toggle panel"><span id="panelArrow">›</span></button></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="date-badge" id="dateBadge"></span>
+          <button class="theme-btn theme-btn--mobile" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">
+            <svg id="themeIconMobile" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          </button>
+          <button class="panel-toggle" id="panelToggle" onclick="togglePanel()" title="Toggle panel"><span id="panelArrow">›</span></button>
+        </div>
       </div>
     </div>
     <div class="search-row">
@@ -345,6 +354,13 @@
 
   <!-- RIGHT PANEL -->
   <div class="right-panel">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+      <button class="theme-btn" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">
+        <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+    </div>
 
     <div class="panel-section">
       <div class="panel-label">Read progress</div>
@@ -604,7 +620,8 @@ function cardHtml(a){
   const idx=sources.findIndex(s=>s.id==a.source_id);const color=COLORS[Math.max(0,idx)%COLORS.length];
   const sourceName = sources.find(s => s.id === a.source_id)?.title || a.source_title || 'Unknown';
   const excerpt=(a.excerpt||'').substring(0,140);
-  return`<div class="article-card ${a.read?'read':'unread'}" onclick="openArticle('${a.id}','${esc(a.url||'')}')"><div><div class="card-source" style="color:${color}"><div class="card-source-dot" style="background:${color}"></div>${esc(sourceName)}</div><div class="card-title">${esc(a.title||'')}</div>${excerpt?`<div class="card-excerpt">${esc(excerpt)}…</div>`:''}</div><div class="card-meta"><span class="card-date">${relDate(new Date(a.pub_date))}</span><span class="card-badge ${a.read?'badge-read':'badge-new'}">${a.read?'Read':'New'}</span></div></div>`;
+  const borderColor = a.read ? 'transparent' : color;
+  return`<div class="article-card ${a.read?'read':'unread'}" style="border-left-color:${borderColor}" onclick="openArticle('${a.id}','${esc(a.url||'')}')"><div><div class="card-source" style="color:${color}"><div class="card-source-dot" style="background:${color}"></div>${esc(sourceName)}</div><div class="card-title">${esc(a.title||'')}</div>${excerpt?`<div class="card-excerpt">${esc(excerpt)}…</div>`:''}</div><div class="card-meta"><span class="card-date">${relDate(new Date(a.pub_date))}</span><span class="card-badge ${a.read?'badge-read':'badge-new'}">${a.read?'Read':'New'}</span></div></div>`;
 }
 
 function renderSidebar(){
@@ -780,9 +797,22 @@ async function deleteSource(id) {
 
 // ========== THEME & UI ==========
 function setThemeIcon(isDark) {
-  const icon = document.getElementById('themeIcon');
-  if (!icon) return;
-  icon.innerHTML = isDark
+  const inner = isDark
+    ? `<circle cx="12" cy="12" r="5"/>
+    <line x1="12" y1="1" x2="12" y2="3"/>
+    <line x1="12" y1="21" x2="12" y2="23"/>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+    <line x1="1" y1="12" x2="3" y2="12"/>
+    <line x1="21" y1="12" x2="23" y2="12"/>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`
+    : `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
+  ['themeIcon','themeIconMobile'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = inner;
+  });
+}
     ? `<circle cx="12" cy="12" r="5"/>
     <line x1="12" y1="1" x2="12" y2="3"/>
     <line x1="12" y1="21" x2="12" y2="23"/>
