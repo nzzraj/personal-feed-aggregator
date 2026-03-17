@@ -66,13 +66,23 @@
     .manage-btn:hover{border-color:var(--text-3);color:var(--text);background:var(--bg-hover);}
 
     /* ── THEME TOGGLE ── */
-    .theme-btn{position:fixed;top:20px;right:24px;z-index:70;background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s ease;box-shadow:0 2px 8px var(--shadow);}
+    .theme-btn{
+      position:fixed;top:20px;right:24px;z-index:70;
+      width:36px;height:36px;
+      background:var(--bg-card);
+      border:1px solid var(--border);
+      border-radius:50%;
+      cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      transition:all 0.2s ease;
+      box-shadow:0 2px 8px var(--shadow);
+      color:var(--text-2);
+      padding:0;
+    }
+    .theme-btn:hover{border-color:var(--accent);color:var(--accent);transform:rotate(12deg);}
     .theme-btn:hover{border-color:var(--accent);}
-    .theme-btn-icon{font-size:14px;line-height:1;}
-    .toggle-track{width:32px;height:18px;border-radius:9px;background:var(--border);position:relative;transition:background 0.3s ease;}
-    [data-theme="dark"] .toggle-track{background:var(--accent);}
-    .toggle-thumb{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:white;transition:transform 0.3s ease;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
-    [data-theme="dark"] .toggle-thumb{transform:translateX(14px);}
+    [data-theme="dark"]
+    [data-theme="dark"]
 
     /* ── MAIN ── */
     main{padding:40px 40px;width:100%;}
@@ -223,28 +233,26 @@
       display:none;
       align-items:center;
       gap:6px;
-      padding:6px 12px;
+      padding:5px 10px;
       background:var(--accent-bg);
-      border:1px solid rgba(201,100,66,0.25);
-      border-radius:7px;
-      font-size:11.5px;
+      border:1px solid rgba(201,100,66,0.2);
+      border-radius:6px;
+      font-size:11px;
       color:var(--accent);
       font-weight:500;
       letter-spacing:0.2px;
       cursor:pointer;
     }
-    #adminIndicator:hover{background:rgba(201,100,66,0.15);}
+    #adminIndicator:hover{opacity:0.8;}
     #adminIndicator::before{
       content:'';
-      width:7px;height:7px;
+      width:6px;height:6px;
       border-radius:50%;
       background:var(--accent);
       flex-shrink:0;
       animation:adminPulse 2s infinite;
     }
-    #adminIndicator::after{content:'↑ Shift+A to exit';}
     @keyframes adminPulse{0%,100%{opacity:1}50%{opacity:0.35}}
-    /* Write mode — sidebar action buttons get subtle accent border */
     .write-mode .refresh-btn{box-shadow:0 0 0 1.5px rgba(201,100,66,0.3);}
     .write-mode .manage-btn{border-color:rgba(201,100,66,0.25);}
     /* ── MOBILE ADMIN BUTTON ── */
@@ -299,9 +307,10 @@
 <body>
 
 <div class="refresh-progress" id="refreshProgress"></div>
-<button class="theme-btn" onclick="toggleTheme()" title="Toggle dark mode">
-  <span class="theme-btn-icon" id="themeIcon">☽</span>
-  <div class="toggle-track"><div class="toggle-thumb"></div></div>
+<button class="theme-btn" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">
+  <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
 </button>
 
 <div class="layout">
@@ -798,18 +807,34 @@ async function deleteSource(id) {
 }
 
 // ========== THEME & UI ==========
+function setThemeIcon(isDark) {
+  const icon = document.getElementById('themeIcon');
+  if (!icon) return;
+  icon.innerHTML = isDark
+    ? `<circle cx="12" cy="12" r="5"/>
+    <line x1="12" y1="1" x2="12" y2="3"/>
+    <line x1="12" y1="21" x2="12" y2="23"/>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+    <line x1="1" y1="12" x2="3" y2="12"/>
+    <line x1="21" y1="12" x2="23" y2="12"/>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`
+    : `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
+}
+
 function toggleTheme(){
   const dark=document.documentElement.getAttribute('data-theme')==='dark';
   const next=dark?'light':'dark';
   document.documentElement.setAttribute('data-theme',next);
-  document.getElementById('themeIcon').textContent=next==='dark'?'☀':'☽';
+  setThemeIcon(next==='dark');
   localStorage.setItem('theme',next);
 }
 
 function restoreTheme(){
   const s=localStorage.getItem('theme')||'light';
   document.documentElement.setAttribute('data-theme',s);
-  document.getElementById('themeIcon').textContent=s==='dark'?'☀':'☽';
+  setThemeIcon(s==='dark');
 }
 
 function groupLabel(d){
