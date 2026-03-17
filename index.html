@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-title" content="ReadFeed">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/icon-192.png">
-  <title>My Feed</title>
+  <title>My Reading Feed</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -87,7 +87,7 @@
     .search-input{width:100%;padding:10px 16px 10px 36px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);font-family:'Figtree',sans-serif;transition:all 0.2s ease;}
     .search-input::placeholder{color:var(--text-3);}
     .search-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(201,100,66,0.1);}
-    .filter-tabs{display:flex;gap:5px;margin:16px 0 20px;animation:fadeUp 0.5s ease-out 0.25s both;}
+    .filter-tabs{display:none;gap:5px;margin:16px 0 20px;animation:fadeUp 0.5s ease-out 0.25s both;}
     .tab{padding:7px 15px;border-radius:6px;font-size:13px;cursor:pointer;border:1px solid transparent;color:var(--text-2);background:transparent;font-family:'Figtree',sans-serif;transition:all 0.15s ease;}
     .tab:hover{background:var(--bg-hover);color:var(--text);}
     .tab.active{background:var(--accent-bg);color:var(--accent);border-color:rgba(201,100,66,0.2);font-weight:500;}
@@ -183,7 +183,7 @@
     .mob-btn:active{opacity:0.7;}
     .mob-icon{font-size:18px;line-height:1;}
     @media(max-width:768px){
-      .filter-tabs{display:none;}
+      .filter-tabs{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;flex-wrap:nowrap;}
       .panel-toggle{display:none;}
       .layout{grid-template-columns:1fr;}
       aside{display:none;}
@@ -192,7 +192,6 @@
       .mobile-nav{display:grid;}
       .theme-btn{top:14px;right:14px;}
       .main-header-top{flex-direction:column;gap:4px;align-items:flex-start;}
-      .filter-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;flex-wrap:nowrap;}
       .tab{white-space:nowrap;}
       .modal{padding:24px 20px;max-height:90vh;border-radius:20px 20px 0 0;width:100%;position:fixed;bottom:0;left:0;right:0;margin:0;}
       .modal-overlay{align-items:flex-end;}
@@ -206,10 +205,82 @@
     .skeleton-line.excerpt{height:11px;width:90%;margin-bottom:4px;}
     .skeleton-line.excerpt-short{height:11px;width:55%;}
     @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+    /* ── REFRESH PROGRESS ── */
+    .refresh-progress{
+      height:2px;
+      background:var(--accent);
+      position:fixed;
+      top:0;left:0;
+      width:0%;
+      z-index:300;
+      transition:width 0.3s ease;
+      border-radius:0 2px 2px 0;
+    }
+    .articles.refreshing{opacity:0.5;pointer-events:none;transition:opacity 0.2s;}
+
+    /* ── ADMIN INDICATOR ── */
+    #adminIndicator{
+      display:none;
+      align-items:center;
+      justify-content:center;
+      gap:5px;
+      padding:5px 10px;
+      background:var(--accent-bg);
+      border:1px solid rgba(201,100,66,0.2);
+      border-radius:6px;
+      font-size:11px;
+      color:var(--accent);
+      font-weight:500;
+      letter-spacing:0.3px;
+    }
+    #adminIndicator::before{
+      content:'';
+      width:6px;height:6px;
+      border-radius:50%;
+      background:var(--accent);
+      animation:adminPulse 2s infinite;
+    }
+    @keyframes adminPulse{0%,100%{opacity:1}50%{opacity:0.4}}
+    /* ── MOBILE ADMIN BUTTON ── */
+    #mob-admin.authed{color:var(--accent);}
+    #mob-admin.authed #mobAdminIcon{filter:drop-shadow(0 0 4px var(--accent));}
+
+    /* ── MOBILE ADMIN BUTTON ── */
+    .mob-admin-btn{
+      position:relative;
+      padding:5px 8px;
+      border-radius:8px;
+      transition:all 0.2s ease;
+      color:var(--text-3);
+    }
+    .mob-admin-icon{
+      width:28px;height:28px;
+      border-radius:7px;
+      background:var(--tag-bg);
+      border:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;
+      transition:all 0.2s ease;
+      color:var(--text-3);
+    }
+    .mob-admin-btn.authed .mob-admin-icon{
+      background:var(--accent-bg);
+      border-color:rgba(201,100,66,0.3);
+      color:var(--accent);
+      box-shadow:0 0 0 3px rgba(201,100,66,0.12);
+    }
+    .mob-admin-btn.authed #mobAdminLabel{
+      color:var(--accent);
+    }
+    /* Unlocked state: use open padlock via CSS transform */
+    .mob-admin-btn.authed .mob-admin-icon svg{
+      opacity:0.85;
+    }
   </style>
 </head>
 <body>
 
+<div class="refresh-progress" id="refreshProgress"></div>
 <button class="theme-btn" onclick="toggleTheme()" title="Toggle dark mode">
   <span class="theme-btn-icon" id="themeIcon">☽</span>
   <div class="toggle-track"><div class="toggle-thumb"></div></div>
@@ -356,7 +427,7 @@
       <button class="modal-close" onclick="closeAuthModal()">×</button>
     </div>
     <p style="font-size:13px;color:var(--text-2);margin-bottom:20px;line-height:1.5">
-      Enter your admin password to enable write operations.
+      Admin access — only you should know this password.
     </p>
     <div class="add-form">
       <input
@@ -596,20 +667,43 @@ async function openArticle(id,url){
 }
 
 async function refreshFeeds(){
-  const btn=document.getElementById('refreshBtn');btn.disabled=true;btn.innerHTML='<span class="spin">↻</span> &nbsp;Refreshing…';
+  const btn = document.getElementById('refreshBtn');
+  const bar = document.getElementById('refreshProgress');
+  const list = document.getElementById('articlesList');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin">↻</span> &nbsp;Refreshing…';
+  list.classList.add('refreshing');
+
+  // Animate progress bar: 0 → 70% during fetch, then 100% on complete
+  bar.style.width = '0%';
+  bar.style.opacity = '1';
+  setTimeout(() => { bar.style.width = '30%'; }, 50);
+  setTimeout(() => { bar.style.width = '60%'; }, 800);
+
   try{
-    const data = await apiCall('/api/refresh',{method:'POST'});
+    const data = await apiCall('/api/refresh', { method: 'POST' });
+    bar.style.width = '85%';
     await loadData();
-    const now=new Date();
-    document.getElementById('lastRefresh').innerHTML=`<strong>Last refreshed</strong>${now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}`;
+    bar.style.width = '100%';
+    setTimeout(() => { bar.style.opacity = '0'; bar.style.width = '0%'; }, 400);
+
+    const now = new Date();
+    document.getElementById('lastRefresh').innerHTML =
+      `<strong>Last refreshed</strong>${now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}`;
     toast(`✓ ${data.articlesInserted || 0} new articles added`);
-    btn.innerHTML='✓ &nbsp;Done!';
-    setTimeout(()=>{btn.innerHTML='↻ &nbsp;Refresh Feeds';btn.disabled=false;},2500);
-  }catch(e){
+    btn.innerHTML = '✓ &nbsp;Done!';
+    setTimeout(() => { btn.innerHTML = '↻ &nbsp;Refresh Feeds'; btn.disabled = false; }, 2500);
+  } catch(e) {
+    bar.style.width = '100%';
+    bar.style.background = '#e05555';
+    setTimeout(() => { bar.style.opacity = '0'; bar.style.width = '0%'; bar.style.background = ''; }, 600);
     toast('Error refreshing. Please try again.');
-    btn.innerHTML='↻ &nbsp;Refresh Feeds';
-    btn.disabled=false;
+    btn.innerHTML = '↻ &nbsp;Refresh Feeds';
+    btn.disabled = false;
     console.error('Refresh failed:', e);
+  } finally {
+    list.classList.remove('refreshing');
   }
 }
 
@@ -619,7 +713,7 @@ function closeModal(){document.getElementById('modalOverlay').classList.remove('
 function closeModalOnBg(e){if(e.target.id==='modalOverlay')closeModal();}
 
 function renderSourceList(){
-  document.getElementById('sourceList').innerHTML=sources.length?sources.map(s=>`<li class="source-list-item"><div><div class="source-list-name">${esc(s.title||s.name)}</div><div class="source-list-url">${esc(s.url||'')}</div></div><button class="delete-btn" onclick="deleteSource('${s.id}')">Delete</button></li>`).join(''):'<li style="color:var(--text-3);font-size:13px;padding:8px 0">No sources yet.</li>';
+  document.getElementById('sourceList').innerHTML=sources.length?sources.map(s=>`<li class="source-list-item"><div><div class="source-list-name">${esc(s.title||s.name)}</div><div class="source-list-url">${esc(s.url||'')}</div></div><button class="delete-btn" data-id="${s.id}" onclick="deleteSource('${s.id}')">Delete</button></li>`).join(''):'<li style="color:var(--text-3);font-size:13px;padding:8px 0">No sources yet.</li>';
 }
 
 async function addSource(){
@@ -644,17 +738,45 @@ async function addSource(){
   btn.disabled=false;btn.textContent='+ Add Source';
 }
 
-async function deleteSource(id){
-  if(!confirm('Delete this source and all its articles?'))return;
-  try{
-    await apiCall(`/api/sources/${id}`,{method:'DELETE'});
-    await loadData();
-    renderSourceList();
-    toast('Source deleted');
-  }catch(e){
-    toast('Error deleting source');
-    console.error('Delete failed:', e);
+async function deleteSource(id) {
+  // Find the list item and replace delete button with inline confirm
+  const btn = document.querySelector(`.delete-btn[data-id="${id}"]`);
+  if (!btn) return;
+
+  // If already in confirm state, proceed with deletion
+  if (btn.dataset.confirming === '1') {
+    btn.textContent = '…';
+    btn.disabled = true;
+    try {
+      await apiCall(`/api/sources/${id}`, { method: 'DELETE' });
+      await loadData();
+      renderSourceList();
+      toast('Source deleted');
+    } catch(e) {
+      toast('Error deleting source');
+      console.error('Delete failed:', e);
+      btn.textContent = 'Delete';
+      btn.disabled = false;
+      delete btn.dataset.confirming;
+    }
+    return;
   }
+
+  // First click — show inline confirm
+  btn.dataset.confirming = '1';
+  btn.textContent = 'Sure?';
+  btn.style.borderColor = '#e05555';
+  btn.style.color = '#e05555';
+
+  // Auto-reset after 3 seconds if no second click
+  setTimeout(() => {
+    if (btn.dataset.confirming) {
+      btn.textContent = 'Delete';
+      btn.style.borderColor = '';
+      btn.style.color = '';
+      delete btn.dataset.confirming;
+    }
+  }, 3000);
 }
 
 // ========== THEME & UI ==========
@@ -718,14 +840,19 @@ function mobFilter(f) {
 let _authSuccessCallback = null;
 
 function updateLockUI() {
-  // Show a subtle indicator when in write mode — invisible to visitors
+  const loggedIn = isLoggedIn();
+  // Subtle indicator in sidebar — invisible to visitors, obvious to you
   const indicator = document.getElementById('adminIndicator');
-  if (indicator) indicator.style.display = isLoggedIn() ? 'block' : 'none';
-  // Update mobile nav admin button
-  const mobIcon = document.getElementById('mobAdminIcon');
+  if (indicator) {
+    indicator.style.display = loggedIn ? 'flex' : 'none';
+    indicator.textContent = 'write mode';
+  }
+  // Mobile nav admin button
+  const mobIcon  = document.getElementById('mobAdminIcon');
   const mobLabel = document.getElementById('mobAdminLabel');
-  if (mobIcon) mobIcon.textContent = isLoggedIn() ? '🔓' : '🔒';
-  if (mobLabel) mobLabel.textContent = isLoggedIn() ? 'Logout' : 'Admin';
+  const mobAdmin = document.getElementById('mob-admin');
+  if (mobLabel) mobLabel.textContent = loggedIn ? 'Logout' : 'Admin';
+  if (mobAdmin) mobAdmin.classList.toggle('authed', loggedIn);
 }
 
 function toggleAuth() {
@@ -845,9 +972,14 @@ if ('serviceWorker' in navigator) {
     <button class="mob-btn" id="mob-sources" onclick="openModal()">
       <span class="mob-icon">⚙</span>Sources
     </button>
-    <button class="mob-btn" id="mob-admin" onclick="toggleAuth()" title="Admin">
-      <span class="mob-icon" id="mobAdminIcon">·····</span>
-      <span id="mobAdminLabel" style="font-size:9px;letter-spacing:1px">····</span>
+    <button class="mob-btn mob-admin-btn" id="mob-admin" onclick="toggleAuth()">
+      <span class="mob-admin-icon" id="mobAdminIcon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </span>
+      <span id="mobAdminLabel">Admin</span>
     </button>
   </nav>
 </body>
