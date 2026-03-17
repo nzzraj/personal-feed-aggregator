@@ -67,24 +67,26 @@
 
     /* ── THEME TOGGLE ── */
     .theme-btn{
-      width:32px;height:32px;
-      background:transparent;
+      position:fixed;top:20px;right:24px;z-index:70;
+      width:36px;height:36px;
+      background:var(--bg-card);
       border:1px solid var(--border);
       border-radius:50%;
       cursor:pointer;
       display:flex;align-items:center;justify-content:center;
       transition:all 0.2s ease;
-      color:var(--text-3);
+      box-shadow:0 2px 8px var(--shadow);
+      color:var(--text-2);
       padding:0;
-      flex-shrink:0;
     }
     .theme-btn:hover{border-color:var(--accent);color:var(--accent);transform:rotate(15deg);}
+    @media(max-width:768px){.theme-btn{top:14px;right:14px;}}
     .theme-btn:hover{border-color:var(--accent);}
     [data-theme="dark"]
     [data-theme="dark"]
 
     /* ── MAIN ── */
-    main{padding:40px 40px;width:100%;}
+    main{padding:40px 48px 40px 40px;width:100%;min-width:0;}
     .main-header{margin-bottom:24px;animation:fadeUp 0.5s ease-out 0.1s both;}
     .main-header-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px;}
     .section-title{font-family:'Lora',serif;font-size:26px;font-weight:500;color:var(--text);}
@@ -306,22 +308,19 @@
 
 <div class="refresh-progress" id="refreshProgress"></div>
 
+<button class="theme-btn" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">
+  <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+</button>
+
 <div class="layout">
 
   <!-- LEFT SIDEBAR -->
   <aside>
     <div class="logo">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;">
-        <div>
-          <span class="logo-eyebrow">Personal</span>
-          <div class="logo-title">My <span>Reading</span> Feed</div>
-        </div>
-        <button class="theme-btn" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode" style="margin-top:4px;">
-          <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-          </svg>
-        </button>
-      </div>
+      <span class="logo-eyebrow">Personal</span>
+      <div class="logo-title">My <span>Reading</span> Feed</div>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-label">Browse</div>
