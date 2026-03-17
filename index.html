@@ -67,19 +67,18 @@
 
     /* ── THEME TOGGLE ── */
     .theme-btn{
-      position:fixed;top:20px;right:24px;z-index:70;
-      width:36px;height:36px;
-      background:var(--bg-card);
+      width:32px;height:32px;
+      background:transparent;
       border:1px solid var(--border);
       border-radius:50%;
       cursor:pointer;
       display:flex;align-items:center;justify-content:center;
       transition:all 0.2s ease;
-      box-shadow:0 2px 8px var(--shadow);
-      color:var(--text-2);
+      color:var(--text-3);
       padding:0;
+      flex-shrink:0;
     }
-    .theme-btn:hover{border-color:var(--accent);color:var(--accent);transform:rotate(12deg);}
+    .theme-btn:hover{border-color:var(--accent);color:var(--accent);transform:rotate(15deg);}
     .theme-btn:hover{border-color:var(--accent);}
     [data-theme="dark"]
     [data-theme="dark"]
@@ -199,7 +198,6 @@
       .right-panel{display:none;}
       main{padding:20px 16px 90px;}
       .mobile-nav{display:grid;}
-      .theme-btn{top:14px;right:14px;}
       .main-header-top{flex-direction:column;gap:4px;align-items:flex-start;}
       .tab{white-space:nowrap;}
       .modal{padding:24px 20px;max-height:90vh;border-radius:20px 20px 0 0;width:100%;position:fixed;bottom:0;left:0;right:0;margin:0;}
@@ -307,19 +305,23 @@
 <body>
 
 <div class="refresh-progress" id="refreshProgress"></div>
-<button class="theme-btn" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">
-  <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-  </svg>
-</button>
 
 <div class="layout">
 
   <!-- LEFT SIDEBAR -->
   <aside>
     <div class="logo">
-      <span class="logo-eyebrow">Personal</span>
-      <div class="logo-title">My <span>Reading</span> Feed</div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+        <div>
+          <span class="logo-eyebrow">Personal</span>
+          <div class="logo-title">My <span>Reading</span> Feed</div>
+        </div>
+        <button class="theme-btn" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode" style="margin-top:4px;">
+          <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
+      </div>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-label">Browse</div>
@@ -344,7 +346,7 @@
       <button class="refresh-btn" id="refreshBtn" onclick="refreshFeeds()">↻ &nbsp;Refresh Feeds</button>
       <button class="manage-btn" onclick="openModal()">⚙ Manage Sources</button>
       <!-- Admin mode: Shift+A on desktop, long-press logo on mobile -->
-      <div id="adminIndicator" style="display:none;text-align:center;font-size:11px;color:var(--accent);opacity:0.7;padding:4px 0">● write mode</div>
+      <div id="adminIndicator" onclick="toggleAuth()" title="Click to logout"></div>
     </div>
   </aside>
 
@@ -886,7 +888,10 @@ function updateLockUI() {
   const loggedIn = isLoggedIn();
   // Subtle indicator in sidebar — invisible to visitors, obvious to you
   const indicator = document.getElementById('adminIndicator');
-  if (indicator) indicator.style.display = loggedIn ? 'flex' : 'none';
+  if (indicator) {
+    indicator.style.display = loggedIn ? 'flex' : 'none';
+    indicator.textContent = loggedIn ? 'write mode' : '';
+  }
   // Toggle write-mode class on sidebar for subtle visual cues
   const sidebar = document.querySelector('aside');
   if (sidebar) sidebar.classList.toggle('write-mode', loggedIn);
