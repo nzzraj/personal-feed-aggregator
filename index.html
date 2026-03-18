@@ -147,6 +147,8 @@
     .source-list-item{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;}
     .source-list-name{font-size:14px;font-weight:500;color:var(--text);margin-bottom:2px;}
     .source-list-url{font-size:11px;color:var(--text-3);}
+    .edit-btn{padding:6px 12px;background:transparent;border:1px solid var(--border);color:var(--text-3);font-size:12px;border-radius:6px;cursor:pointer;font-family:'Figtree',sans-serif;transition:all 0.15s;}
+    .edit-btn:hover{border-color:var(--accent);color:var(--accent);}
     .delete-btn{padding:6px 12px;background:transparent;border:1px solid var(--border);color:var(--text-3);font-size:12px;border-radius:6px;cursor:pointer;font-family:'Figtree',sans-serif;transition:all 0.15s;}
     .delete-btn:hover{border-color:#e05555;color:#e05555;background:rgba(224,85,85,0.05);}
     .add-form{display:flex;flex-direction:column;gap:10px;}
@@ -650,7 +652,17 @@ function closeModal(){document.getElementById('modalOverlay').classList.remove('
 function closeModalOnBg(e){if(e.target.id==='modalOverlay')closeModal();}
 
 function renderSourceList(){
-  document.getElementById('sourceList').innerHTML=sources.length?sources.map(s=>`<li class="source-list-item"><div><div class="source-list-name">${esc(s.title||s.name)}</div><div class="source-list-url">${esc(s.url||'')}</div></div><button class="delete-btn" data-id="${s.id}" onclick="deleteSource('${s.id}')">Delete</button></li>`).join(''):'<li style="color:var(--text-3);font-size:13px;padding:8px 0">No sources yet.</li>';
+  document.getElementById('sourceList').innerHTML=sources.length?sources.map(s=>`
+    <li class="source-list-item">
+      <div style="flex:1;min-width:0">
+        <div class="source-list-name" id="name-${s.id}">${esc(s.title||s.name)}</div>
+        <div class="source-list-url">${esc(s.url||'')}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="edit-btn" data-id="${s.id}" data-name="${esc(s.title||s.name)}" onclick="editSource('${s.id}')">Edit</button>
+        <button class="delete-btn" data-id="${s.id}" onclick="deleteSource('${s.id}')">Delete</button>
+      </div>
+    </li>`).join(''):'<li style="color:var(--text-3);font-size:13px;padding:8px 0">No sources yet.</li>';
 }
 
 async function addSource(){
@@ -673,6 +685,54 @@ async function addSource(){
     console.error('Add source failed:', e);
   }
   btn.disabled=false;btn.textContent='+ Add Source';
+}
+
+async function editSource(id) {
+  const btn = document.querySelector(`.edit-btn[data-id="${id}"]`);
+  const nameEl = document.getElementById(`name-${id}`);
+  if (!btn || !nameEl) return;
+
+  // If already editing, save
+  if (btn.dataset.editing === '1') {
+    const input = nameEl.querySelector('input');
+    if (!input) return;
+    const newName = input.value.trim();
+    if (!newName) { toast('Name cannot be empty'); return; }
+
+    btn.textContent = '…';
+    btn.disabled = true;
+
+    try {
+      await apiCall(`/api/sources/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ title: newName })
+      });
+      await loadSources();
+      renderSourceList();
+      toast('✓ Source renamed');
+    } catch(e) {
+      toast('Error renaming source');
+      btn.textContent = 'Save';
+      btn.disabled = false;
+    }
+    return;
+  }
+
+  // First click — replace name with input
+  btn.dataset.editing = '1';
+  btn.textContent = 'Save';
+  btn.style.borderColor = 'var(--accent)';
+  btn.style.color = 'var(--accent)';
+
+  const currentName = btn.dataset.name;
+  nameEl.innerHTML = `<input
+    type="text"
+    value="${esc(currentName)}"
+    style="width:100%;padding:3px 6px;background:var(--bg);border:1px solid var(--accent);border-radius:5px;font-size:13px;color:var(--text);font-family:'Figtree',sans-serif;"
+    onkeydown="if(event.key==='Enter')editSource('${id}');if(event.key==='Escape')renderSourceList();"
+    autofocus
+  >`;
+  nameEl.querySelector('input').select();
 }
 
 async function deleteSource(id) {

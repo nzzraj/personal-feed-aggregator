@@ -17,6 +17,13 @@ export function withAuth(handler) {
       });
     }
 
+    // Accept raw API_KEY (used by GitHub Actions / server-to-server)
+    const apiKey = process.env.API_KEY;
+    if (apiKey && token === apiKey) {
+      return handler(request, context);
+    }
+
+    // Accept JWT (used by the browser after admin login)
     const payload = await verifyToken(token);
     if (!payload || payload.role !== 'admin') {
       return new Response(JSON.stringify({ error: 'Invalid or expired session. Please log in again.' }), {
