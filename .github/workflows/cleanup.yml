@@ -1,37 +1,41 @@
-name: Daily Cleanup
+name: Cleanup Old Articles
 
 on:
   schedule:
-    # Run every day at 2 AM UTC
-    - cron: '0 2 * * *'
-  workflow_dispatch:
+    - cron: '0 3 * * 0'  # 3 AM UTC every Sunday (8:30 AM IST)
+  workflow_dispatch:      # allow manual trigger from GitHub UI
 
 jobs:
   cleanup:
     runs-on: ubuntu-latest
-    
-    steps:
-      - name: Clean up old articles
-        run: |
-          echo "🧹 Starting cleanup..."
-          
-          # Using Supabase SQL API via curl
-          CLEANUP_RESPONSE=$(curl -s -X POST \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_JWT }}" \
-            -H "Content-Type: application/json" \
-            -d '{}' \
-            https://[YOUR_SUPABASE_URL]/rest/v1/rpc/cleanup_old_articles?days_to_keep=90)
-          
-          echo "Cleanup response:"
-          echo "$CLEANUP_RESPONSE"
-          
-          # Alternative: Call via pg_dump/psql if you have credentials
-          # PGPASSWORD="${{ secrets.POSTGRES_PASSWORD }}" psql \
-          #   -h ${{ secrets.POSTGRES_HOST }} \
-          #   -U postgres \
-          #   -d postgres \
-          #   -c "SELECT cleanup_old_articles(90);"
+    timeout-minutes: 5
 
-      - name: Verify cleanup
+    steps:
+      - name: Delete old read articles
         run: |
-          echo "✅ Cleanup completed"
+          echo "🧹 Running cleanup..."
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Authorization: Bearer ${{ secrets.API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"days_to_keep": 60}' \
+            https://myreadfeed.vercel.app/api/cleanup)
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+
+          echo "HTTP status: $HTTP_CODE"
+          echo "Response: $BODY"
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Cleanup failed with status $HTTP_CODE"
+            exit 1
+          fi
+
+          DELETED=$(echo "$BODY"   | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('deleted',0))"    2>/dev/null || echo "?")
+          REMAINING=$(echo "$BODY" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('remaining',0))"  2>/dev/null || echo "?")
+
+          echo ""
+          echo "📊 Summary"
+          echo "   🗑️  Articles deleted  : $DELETED"
+          echo "   📄 Articles remaining : $REMAINING"

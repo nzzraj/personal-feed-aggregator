@@ -1,50 +1,45 @@
-name: Daily Feed Refresh
+name: Refresh Feeds
 
 on:
   schedule:
-    # Run every day at 8 AM UTC
-    - cron: '0 8 * * *'
-  workflow_dispatch:  # Allow manual trigger
+    - cron: '30 2 * * *'  # 2:30 AM UTC daily (8:00 AM IST)
+    - cron: '30 14 * * *' # 2:30 PM UTC daily (8:00 PM IST)
+  workflow_dispatch:       # allow manual trigger from GitHub UI
 
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    
+    timeout-minutes: 5
+
     steps:
-      - name: Refresh feeds via API
+      - name: Trigger feed refresh
         run: |
-          # Call the refresh endpoint with API key
-          RESPONSE=$(curl -X POST \
+          echo "🔄 Refreshing feeds..."
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             -H "Authorization: Bearer ${{ secrets.API_KEY }}" \
             -H "Content-Type: application/json" \
-            https://neerajfeed.vercel.app/api/refresh)
-          
-          echo "Refresh response:"
-          echo "$RESPONSE" | jq .
-          
-          # Check if response indicates success
-          SUCCESS_COUNT=$(echo "$RESPONSE" | jq '.success // 0')
-          TOTAL_SOURCES=$(($SUCCESS_COUNT + $(echo "$RESPONSE" | jq '.failed // 0')))
-          ARTICLES_INSERTED=$(echo "$RESPONSE" | jq '.articlesInserted // 0')
-          
-          echo ""
-          echo "📊 Refresh Summary:"
-          echo "   ✅ Successful: $SUCCESS_COUNT"
-          echo "   ❌ Failed: $(echo "$RESPONSE" | jq '.failed // 0')"
-          echo "   📄 Articles: $ARTICLES_INSERTED inserted"
-          echo "   ⏱️  Duration: $(echo "$RESPONSE" | jq -r '.duration // "unknown"')"
-          
-          # Exit with error if feeds failed
-          if [ "$SUCCESS_COUNT" -lt 5 ]; then
-            echo "⚠️  Warning: Less than 5 feeds refreshed successfully"
+            https://myreadfeed.vercel.app/api/refresh)
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+
+          echo "HTTP status: $HTTP_CODE"
+          echo "Response: $BODY"
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Refresh failed with status $HTTP_CODE"
             exit 1
           fi
 
-      - name: Send notification on failure
-        if: failure()
-        run: |
-          # Optional: Send Slack/Discord notification
-          # Example for Slack:
-          # curl -X POST ${{ secrets.SLACK_WEBHOOK }} \
-          #   -d '{"text":"🔴 Feed refresh failed"}'
-          echo "Feed refresh failed"
+          INSERTED=$(echo "$BODY" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('articlesInserted',0))" 2>/dev/null || echo "?")
+          SUCCESS=$(echo "$BODY"  | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('success',0))"           2>/dev/null || echo "?")
+          FAILED=$(echo "$BODY"   | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('failed',0))"            2>/dev/null || echo "?")
+          DURATION=$(echo "$BODY" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('duration','?'))"        2>/dev/null || echo "?")
+
+          echo ""
+          echo "📊 Summary"
+          echo "   ✅ Sources OK : $SUCCESS"
+          echo "   ❌ Sources failed : $FAILED"
+          echo "   📄 Articles inserted : $INSERTED"
+          echo "   ⏱️  Duration : $DURATION"
